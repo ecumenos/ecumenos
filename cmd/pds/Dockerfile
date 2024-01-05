@@ -24,6 +24,6 @@ COPY --from=build-env /pds /
 ENV GODEBUG=netdns=go
 ENV TZ=Etc/UTC
 
-EXPOSE 9090
+EXPOSE 9090 9190
 
 CMD ["/pds", "run"]

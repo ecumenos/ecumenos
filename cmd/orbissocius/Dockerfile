@@ -24,6 +24,6 @@ COPY --from=build-env /orbissocius /
 ENV GODEBUG=netdns=go
 ENV TZ=Etc/UTC
 
-EXPOSE 9091
+EXPOSE 9091 9191
 
 CMD ["/orbissocius", "run"]

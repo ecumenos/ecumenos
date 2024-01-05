@@ -1,5 +1,6 @@
-GOPRIVATE=github.com/ecumenos
-SHELL=/bin/sh
+export GOPRIVATE=github.com/ecumenos
+export SHELL=/bin/sh
+export GOEXPERIMENT := loopvar
 
 .PHONY: all
 all: tidy check fmt lint test mock tidy
@@ -103,6 +104,10 @@ migrate-up-zookeeper: .env
 .PHONY: migrate-down-zookeeper
 migrate-down-zookeeper: .env
 	export API_LOCAL=true && go run cmd/zookeeper/main.go migrate-down
+
+.PHONY: seeds-zookeeper
+seeds-zookeeper: .env
+	export API_LOCAL=true && go run cmd/zookeeper/main.go run-seeds
 
 .PHONY: build-zookeeper-image
 build-zookeeper-image:

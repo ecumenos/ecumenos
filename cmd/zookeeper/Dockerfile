@@ -24,6 +24,6 @@ COPY --from=build-env /zookeeper /
 ENV GODEBUG=netdns=go
 ENV TZ=Etc/UTC
 
-EXPOSE 9092
+EXPOSE 9092 9192
 
 CMD ["/zookeeper", "run"]
