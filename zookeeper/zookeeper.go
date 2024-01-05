@@ -2,6 +2,7 @@ package zookeeper
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -321,4 +322,33 @@ func (z *Zookeeper) getAdminByEmail(ctx context.Context, email string) (*models.
 	}
 
 	return nil, err
+}
+
+func (z *Zookeeper) AssignRoleForAdmin(ctx context.Context, adminID, roleID int64, granterID *int64) error {
+	granterAdminID := sql.NullInt64{}
+	if granterID != nil {
+		granterAdminID.Int64 = *granterID
+		granterAdminID.Valid = true
+	}
+	_, err := z.insertAdminsAdminRolesRelations(ctx, adminID, roleID, granterAdminID)
+	return err
+}
+
+func (z *Zookeeper) insertAdminsAdminRolesRelations(ctx context.Context, receiverAdminID, adminRoleID int64, granterAdminID sql.NullInt64) (*models.AdminsAdminRolesRelation, error) {
+	grantedAt := time.Now()
+
+	query := fmt.Sprintf(`INSERT INTO public.admins_admin_roles_relations
+  (receiver_admin_id, granter_admin_id, role_id, granted_at)
+  VALUES ($1, $2, $3, $4);`)
+	params := []interface{}{receiverAdminID, granterAdminID, adminRoleID, grantedAt}
+	if _, err := z.Postgres.QueryRow(ctx, query, params...); err != nil {
+		return nil, err
+	}
+
+	return &models.AdminsAdminRolesRelation{
+		ReciverAdminID: receiverAdminID,
+		GranterAdminID: granterAdminID,
+		RoleID:         adminRoleID,
+		GrantedAt:      grantedAt,
+	}, nil
 }
