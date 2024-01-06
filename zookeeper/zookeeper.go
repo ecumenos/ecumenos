@@ -15,6 +15,7 @@ import (
 	"github.com/ecumenos/fxecumenos"
 	"github.com/ecumenos/fxecumenos/fxpostgres/postgres"
 	"github.com/ecumenos/go-toolkit/errorsutils"
+	"github.com/ecumenos/go-toolkit/primitives"
 	"github.com/ecumenos/go-toolkit/timeutils"
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/zap"
@@ -407,6 +408,25 @@ func (z *Zookeeper) CreateAdminSession(ctx context.Context, adminID int64) (*mod
 	return z.insertAdminSession(ctx, adminID, token, refreshToken, refTokExp)
 }
 
+func (z *Zookeeper) Authorize(ctx context.Context, token string) (int64, *models.AdminSession, error) {
+	t, err := z.auth.decodeToken(token)
+	if err != nil {
+		return 0, nil, err
+	}
+	subject := t.Subject()
+	adminID, err := primitives.StringToInt64(subject)
+	if err != nil {
+		return 0, nil, fmt.Errorf("token is corrupted (extracted subject = %v)", subject)
+	}
+
+	s, err := z.getAdminSessionByAdminIDAndToken(ctx, adminID, token)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return adminID, s, nil
+}
+
 func (z *Zookeeper) insertAdminSession(ctx context.Context, adminID int64, t, rt string, expiredAt time.Time) (*models.AdminSession, error) {
 	id, err := snowflake.GetSnowflakeID[models.AdminSession](ctx, 0, z.getAdminSessionByID)
 	if err != nil {
@@ -447,6 +467,41 @@ func (z *Zookeeper) getAdminSessionByID(ctx context.Context, id int64) (*models.
 		where id=$1 and tombstoned=false;
 	`)
 	row, err := z.Postgres.QueryRow(ctx, q, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var s models.AdminSession
+	err = row.Scan(
+		&s.ID,
+		&s.CreatedAt,
+		&s.UpdatedAt,
+		&s.ExpiredAt,
+		&s.DeletedAt,
+		&s.Tombstoned,
+		&s.AdminID,
+		&s.Token,
+		&s.RefreshToken,
+	)
+	if err == nil {
+		return &s, nil
+	}
+
+	if errorsutils.Equals(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	return nil, err
+}
+
+func (z *Zookeeper) getAdminSessionByAdminIDAndToken(ctx context.Context, adminID int64, token string) (*models.AdminSession, error) {
+	q := fmt.Sprintf(`
+		select
+      id, created_at, updated_at, expired_at, deleted_at, tombstoned, admin_id, token, refresh_token
+    from public.admin_sessions
+		where admin_id=$1 and token=$2 and tombstoned=false;
+	`)
+	row, err := z.Postgres.QueryRow(ctx, q, adminID, token)
 	if err != nil {
 		return nil, err
 	}

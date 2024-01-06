@@ -33,8 +33,8 @@ github.com/docker/go-units v0.5.0 h1:69rxXcBk27SvSaaxTtLh/8llcHD8vYHT7WSdRZ/jvr4
 github.com/docker/go-units v0.5.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/ecumenos/fxecumenos v0.0.8 h1:VYjI04Wv+6DnYZUvvbQzwPIzKtEems6BKvE1EeWIhk0=
 github.com/ecumenos/fxecumenos v0.0.8/go.mod h1:bf5ceM18G2ceOdJs3g1YgbXo9QvWEEKUSUJJW6ssdps=
-github.com/ecumenos/go-toolkit v0.0.4 h1:Dqkgu4E3kvJPoFCqqZFPs8Hqtmje4arLiNuTH+RD1fE=
-github.com/ecumenos/go-toolkit v0.0.4/go.mod h1:OpwisnC0seJOPAddLKJOGcpMWTXywyQLpXFR+a6JC1w=
+github.com/ecumenos/go-toolkit v0.0.6 h1:bkKPekRiola4+iqbnHDmp/XPZBxJiMYWfjXCGblJjWs=
+github.com/ecumenos/go-toolkit v0.0.6/go.mod h1:OpwisnC0seJOPAddLKJOGcpMWTXywyQLpXFR+a6JC1w=
 github.com/go-kit/log v0.1.0/go.mod h1:zbhenjAZHb184qTLMA9ZjW7ThYL0H2mk7Q6pNt4vbaY=
 github.com/go-logfmt/logfmt v0.5.0/go.mod h1:wCYkCAKZfumFQihp8CzCvQ3paCTfi41vtzG1KdI/P7A=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=

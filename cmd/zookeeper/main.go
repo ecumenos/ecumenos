@@ -53,7 +53,14 @@ func run(args []string) error {
 var runAppCmd = &cli.Command{
 	Name:  "run-api-server",
 	Usage: "run API HTTP server",
-	Flags: []cli.Flag{},
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:    "jwt_secret",
+			Usage:   "secret used for authenticating JWT tokens",
+			Value:   "jwtsecretplaceholder",
+			EnvVars: []string{"APP_JWT_SECRET"},
+		},
+	},
 	Action: func(cctx *cli.Context) error {
 		return zerodowntime.HandleApp(fx.New(
 			fx.Invoke(func(lc fx.Lifecycle, shutdowner fx.Shutdowner) {
@@ -61,6 +68,7 @@ var runAppCmd = &cli.Command{
 					Prod:        cctx.Bool("prod"),
 					Addr:        ":9092",
 					PostgresURL: cctx.String("pg_url"),
+					JWTSecret:   []byte(cctx.String("jwt_secret")),
 				}
 				l, err := newLogger(cctx.Bool("prod"))
 				if err != nil {
@@ -106,7 +114,14 @@ var runAppCmd = &cli.Command{
 var runAdminAppCmd = &cli.Command{
 	Name:  "run-admin-server",
 	Usage: "run Admin HTTP server",
-	Flags: []cli.Flag{},
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:    "jwt_secret",
+			Usage:   "secret used for authenticating JWT tokens",
+			Value:   "jwtsecretplaceholder",
+			EnvVars: []string{"ADMIN_JWT_SECRET"},
+		},
+	},
 	Action: func(cctx *cli.Context) error {
 		return zerodowntime.HandleApp(fx.New(
 			fx.Invoke(func(lc fx.Lifecycle, shutdowner fx.Shutdowner) {
@@ -114,6 +129,7 @@ var runAdminAppCmd = &cli.Command{
 					Prod:        cctx.Bool("prod"),
 					Addr:        ":9192",
 					PostgresURL: cctx.String("pg_url"),
+					JWTSecret:   []byte(cctx.String("jwt_secret")),
 				}
 				l, err := newLogger(cctx.Bool("prod"))
 				if err != nil {

@@ -4,7 +4,7 @@ go 1.21.5
 
 require (
 	github.com/ecumenos/fxecumenos v0.0.8
-	github.com/ecumenos/go-toolkit v0.0.4
+	github.com/ecumenos/go-toolkit v0.0.6
 	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/lestrrat-go/jwx/v2 v2.0.18

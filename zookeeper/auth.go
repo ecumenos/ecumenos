@@ -49,3 +49,7 @@ func (a *authorization) createAdminTokens(ctx context.Context, adminID int64, to
 func (a *authorization) getExpiredAt() (forToken, forRefreshToken time.Time) {
 	return time.Now().Add(24 * time.Hour), time.Now().Add(7 * 24 * time.Hour)
 }
+
+func (a *authorization) decodeToken(token string) (jwt.Token, error) {
+	return jwt.ParseString(token, jwt.WithVerify(true), jwt.WithValidate(true))
+}
