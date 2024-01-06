@@ -42,7 +42,8 @@ create table public.admin_sessions
   deleted_at       timestamp(0) with time zone,
   tombstoned       boolean not null default false,
   admin_id         bigint references admins (id) not null,
-  role_id          bigint references admin_roles (id) not null
+  token            text not null,
+  refresh_token    text not null
 );
 
 commit;

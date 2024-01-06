@@ -3,6 +3,7 @@ package zookeeper
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/ecumenos/fxecumenos"
 	"github.com/ecumenos/fxecumenos/fxpostgres/postgres"
 	"github.com/ecumenos/go-toolkit/errorsutils"
+	"github.com/ecumenos/go-toolkit/timeutils"
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/zap"
 )
@@ -27,11 +29,13 @@ type Config struct {
 	Addr        string
 	Prod        bool
 	PostgresURL string
+	JWTSecret   []byte
 }
 
 type Zookeeper struct {
 	Postgres *postgres.Driver
 	logger   *zap.Logger
+	auth     *authorization
 }
 
 func New(cfg *Config, l *zap.Logger) (*Zookeeper, error) {
@@ -43,6 +47,7 @@ func New(cfg *Config, l *zap.Logger) (*Zookeeper, error) {
 	return &Zookeeper{
 		Postgres: driver,
 		logger:   l,
+		auth:     &authorization{jwtSigningKey: cfg.JWTSecret},
 	}, nil
 }
 
@@ -111,6 +116,19 @@ func getPasswordHash(password string) (string, error) {
 	return hash(password)
 }
 
+func validatePassword(password, passwordHash string) error {
+	hashed, err := getPasswordHash(password)
+	if err != nil {
+		return err
+	}
+
+	if hashed != passwordHash {
+		return errors.New("passwords doesn't match")
+	}
+
+	return nil
+}
+
 func (z *Zookeeper) CreateAdminRole(ctx context.Context, name string, permissions models.AdminRolePermissions, creatorID int64) (*models.AdminRole, error) {
 	return z.insertAdminRole(ctx, name, permissions, creatorID)
 }
@@ -134,9 +152,9 @@ func (z *Zookeeper) insertAdminRole(ctx context.Context, name string, permission
 	updatedAt := time.Now()
 	tombstoned := false
 
-	query := fmt.Sprintf(`INSERT INTO public.admin_roles
+	query := fmt.Sprintf(`insert into public.admin_roles
   (id, created_at, updated_at, tombstoned, name, permissions, creator_admin_id)
-  VALUES ($1, $2, $3, $4, $5, $6, $7);`)
+  values ($1, $2, $3, $4, $5, $6, $7);`)
 	params := []interface{}{id, createdAt, updatedAt, tombstoned, name, permissions, creatorID}
 	if _, err := z.Postgres.QueryRow(ctx, query, params...); err != nil {
 		return nil, err
@@ -155,10 +173,10 @@ func (z *Zookeeper) insertAdminRole(ctx context.Context, name string, permission
 
 func (z *Zookeeper) getAdminRoleByID(ctx context.Context, id int64) (*models.AdminRole, error) {
 	q := fmt.Sprintf(`
-		SELECT
+		select
       id, created_at, updated_at, deleted_at, tombstoned, name, permissions, creator_admin_id
-    FROM public.admin_roles
-		WHERE id=$1;
+    from public.admin_roles
+		where id=$1 and tombstoned=false;
 	`)
 	row, err := z.Postgres.QueryRow(ctx, q, id)
 	if err != nil {
@@ -189,10 +207,10 @@ func (z *Zookeeper) getAdminRoleByID(ctx context.Context, id int64) (*models.Adm
 
 func (z *Zookeeper) getAdminRoleByName(ctx context.Context, name string) (*models.AdminRole, error) {
 	q := fmt.Sprintf(`
-		SELECT
+		select
       id, created_at, updated_at, deleted_at, tombstoned, name, permissions, creator_admin_id
-    FROM public.admin_roles
-		WHERE name=$1;
+    from public.admin_roles
+		where name=$1 and tombstoned=false;
 	`)
 	row, err := z.Postgres.QueryRow(ctx, q, name)
 	if err != nil {
@@ -240,9 +258,9 @@ func (z *Zookeeper) insertAdmin(ctx context.Context, email, passwordHash string)
 	updatedAt := time.Now()
 	tombstoned := false
 
-	query := fmt.Sprintf(`INSERT INTO public.admins
+	query := fmt.Sprintf(`insert into public.admins
   (id, created_at, updated_at, tombstoned, email, password_hash)
-  VALUES ($1, $2, $3, $4, $5, $6);`)
+  values ($1, $2, $3, $4, $5, $6);`)
 	params := []interface{}{id, createdAt, updatedAt, tombstoned, email, passwordHash}
 	if _, err := z.Postgres.QueryRow(ctx, query, params...); err != nil {
 		return nil, err
@@ -260,10 +278,10 @@ func (z *Zookeeper) insertAdmin(ctx context.Context, email, passwordHash string)
 
 func (z *Zookeeper) getAdminByID(ctx context.Context, id int64) (*models.Admin, error) {
 	q := fmt.Sprintf(`
-		SELECT
+		select
       id, created_at, updated_at, deleted_at, tombstoned, email, password_hash
-    FROM public.admins
-		WHERE id=$1;
+    from public.admins
+		where id=$1 and tombstoned=false;
 	`)
 	row, err := z.Postgres.QueryRow(ctx, q, id)
 	if err != nil {
@@ -293,10 +311,10 @@ func (z *Zookeeper) getAdminByID(ctx context.Context, id int64) (*models.Admin, 
 
 func (z *Zookeeper) getAdminByEmail(ctx context.Context, email string) (*models.Admin, error) {
 	q := fmt.Sprintf(`
-		SELECT
+		select
       id, created_at, updated_at, deleted_at, tombstoned, email, password_hash
-    FROM public.admins
-		WHERE email=$1;
+    from public.admins
+		where email=$1 and tombstoned=false;
 	`)
 	row, err := z.Postgres.QueryRow(ctx, q, email)
 	if err != nil {
@@ -337,9 +355,9 @@ func (z *Zookeeper) AssignRoleForAdmin(ctx context.Context, adminID, roleID int6
 func (z *Zookeeper) insertAdminsAdminRolesRelations(ctx context.Context, receiverAdminID, adminRoleID int64, granterAdminID sql.NullInt64) (*models.AdminsAdminRolesRelation, error) {
 	grantedAt := time.Now()
 
-	query := fmt.Sprintf(`INSERT INTO public.admins_admin_roles_relations
+	query := fmt.Sprintf(`insert into public.admins_admin_roles_relations
   (receiver_admin_id, granter_admin_id, role_id, granted_at)
-  VALUES ($1, $2, $3, $4);`)
+  values ($1, $2, $3, $4);`)
 	params := []interface{}{receiverAdminID, granterAdminID, adminRoleID, grantedAt}
 	if _, err := z.Postgres.QueryRow(ctx, query, params...); err != nil {
 		return nil, err
@@ -351,4 +369,107 @@ func (z *Zookeeper) insertAdminsAdminRolesRelations(ctx context.Context, receive
 		RoleID:         adminRoleID,
 		GrantedAt:      grantedAt,
 	}, nil
+}
+
+func (z *Zookeeper) ValidateAdminCredentials(ctx context.Context, email, password string) error {
+	if !commonModels.EmailRegex.MatchString(email) {
+		return fmt.Errorf("invalid email. it doesn't fulfill validation (email = %v)", email)
+	}
+	a, err := z.getAdminByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+	if a == nil {
+		return errors.New("email or password is invalid")
+	}
+	if err := validatePassword(password, a.PasswordHash); err != nil {
+		return errors.New("email or password is invalid")
+	}
+
+	return nil
+}
+
+func (z *Zookeeper) CreateAdminSession(ctx context.Context, adminID int64) (*models.AdminSession, error) {
+	a, err := z.getAdminByID(ctx, adminID)
+	if err != nil {
+		return nil, err
+	}
+	if a == nil {
+		return nil, fmt.Errorf("failed create session for not existing admin (id = %v)", adminID)
+	}
+
+	tokExp, refTokExp := z.auth.getExpiredAt()
+	token, refreshToken, err := z.auth.createAdminTokens(ctx, adminID, tokExp, refTokExp)
+	if err != nil {
+		return nil, err
+	}
+
+	return z.insertAdminSession(ctx, adminID, token, refreshToken, refTokExp)
+}
+
+func (z *Zookeeper) insertAdminSession(ctx context.Context, adminID int64, t, rt string, expiredAt time.Time) (*models.AdminSession, error) {
+	id, err := snowflake.GetSnowflakeID[models.AdminSession](ctx, 0, z.getAdminSessionByID)
+	if err != nil {
+		return nil, err
+	}
+	createdAt := time.Now()
+	updatedAt := time.Now()
+	tombstoned := false
+	if expiredAt.Before(createdAt) {
+		return nil, fmt.Errorf("expired at can not be before created at (expired at = %v, created at = %v)", timeutils.TimeToString(expiredAt), timeutils.TimeToString(createdAt))
+	}
+
+	query := fmt.Sprintf(`insert into public.admin_sessions
+  (id, created_at, updated_at, expired_at, tombstoned, admin_id, token, refresh_token)
+  values ($1, $2, $3, $4, $5, $6, $7, $8);`)
+	params := []interface{}{id, createdAt, updatedAt, expiredAt, tombstoned, adminID, t, rt}
+	if _, err := z.Postgres.QueryRow(ctx, query, params...); err != nil {
+		return nil, err
+	}
+
+	return &models.AdminSession{
+		ID:           id,
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
+		ExpiredAt:    expiredAt,
+		Tombstoned:   tombstoned,
+		AdminID:      adminID,
+		Token:        t,
+		RefreshToken: rt,
+	}, nil
+}
+
+func (z *Zookeeper) getAdminSessionByID(ctx context.Context, id int64) (*models.AdminSession, error) {
+	q := fmt.Sprintf(`
+		select
+      id, created_at, updated_at, expired_at, deleted_at, tombstoned, admin_id, token, refresh_token
+    from public.admin_sessions
+		where id=$1 and tombstoned=false;
+	`)
+	row, err := z.Postgres.QueryRow(ctx, q, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var s models.AdminSession
+	err = row.Scan(
+		&s.ID,
+		&s.CreatedAt,
+		&s.UpdatedAt,
+		&s.ExpiredAt,
+		&s.DeletedAt,
+		&s.Tombstoned,
+		&s.AdminID,
+		&s.Token,
+		&s.RefreshToken,
+	)
+	if err == nil {
+		return &s, nil
+	}
+
+	if errorsutils.Equals(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
+	return nil, err
 }
