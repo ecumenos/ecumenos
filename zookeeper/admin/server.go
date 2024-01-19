@@ -1,4 +1,4 @@
-package zookeeper
+package admin
 
 import (
 	"context"
@@ -6,28 +6,47 @@ import (
 	"time"
 
 	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
+	"github.com/ecumenos/ecumenos/internal/fxtypes"
+	"github.com/ecumenos/ecumenos/internal/httputils"
+	"github.com/ecumenos/ecumenos/zookeeper/config"
+	"github.com/ecumenos/ecumenos/zookeeper/service"
 	"github.com/gorilla/mux"
+	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
-type AdminServer struct {
-	zookeeper       *Zookeeper
+type Server struct {
+	service         *service.Service
 	server          *http.Server
 	logger          *zap.Logger
 	responseFactory fxresponsefactory.Factory
+	serviceVersion  fxtypes.Version
+	serviceName     fxtypes.ServiceName
 }
 
-func NewAdminServer(cfg *Config, z *Zookeeper, l *zap.Logger) *AdminServer {
-	responseFactory := fxresponsefactory.NewFactory(l, &fxresponsefactory.Config{WriteLogs: !cfg.Prod}, ServiceVersion)
-	s := &AdminServer{
-		zookeeper:       z,
-		logger:          l,
+type serverParams struct {
+	fx.In
+
+	Config         *config.Config
+	Service        *service.Service
+	Logger         *zap.Logger
+	ServiceVersion fxtypes.Version
+	ServiceName    fxtypes.ServiceName
+}
+
+func New(p serverParams) *Server {
+	responseFactory := fxresponsefactory.NewFactory(p.Logger, &fxresponsefactory.Config{WriteLogs: !p.Config.Prod}, p.ServiceVersion)
+	s := &Server{
+		service:         p.Service,
+		logger:          p.Logger,
 		responseFactory: responseFactory,
+		serviceVersion:  p.ServiceVersion,
+		serviceName:     p.ServiceName,
 	}
 
 	r := mux.NewRouter().PathPrefix("/api/admin").Subrouter()
-	enrichContext := NewEnrichContextMiddleware(l, responseFactory)
-	recovery := NewRecoverMiddleware(l, responseFactory)
+	enrichContext := httputils.NewEnrichContextMiddleware(p.Logger, responseFactory)
+	recovery := httputils.NewRecoverMiddleware(p.Logger, responseFactory)
 	r.Use(mux.MiddlewareFunc(enrichContext))
 	r.HandleFunc("/info", s.Info).Methods(http.MethodGet)
 	r.HandleFunc("/health", s.Health).Methods(http.MethodGet)
@@ -37,12 +56,12 @@ func NewAdminServer(cfg *Config, z *Zookeeper, l *zap.Logger) *AdminServer {
 	r.Use(mux.MiddlewareFunc(recovery))
 
 	guarded := r.NewRoute().Subrouter()
-	auth := NewAdminAuthorizationMiddleware(l, responseFactory, z)
+	auth := httputils.NewAdminAuthorizationMiddleware(p.Logger, responseFactory, p.Service)
 	guarded.Use(mux.MiddlewareFunc(auth))
 	guarded.HandleFunc("/sign-out", s.SignOut).Methods(http.MethodDelete)
 
 	s.server = &http.Server{
-		Addr:         cfg.Addr,
+		Addr:         p.Config.AdminAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  15 * time.Second,
@@ -52,11 +71,11 @@ func NewAdminServer(cfg *Config, z *Zookeeper, l *zap.Logger) *AdminServer {
 	return s
 }
 
-func (s *AdminServer) Start(ctx context.Context) error {
+func (s *Server) Start(ctx context.Context) error {
 	return s.server.ListenAndServe()
 }
 
-func (s *AdminServer) Shutdown(ctx context.Context) error {
+func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.server.Shutdown(ctx); err != nil {
 		return err
 	}

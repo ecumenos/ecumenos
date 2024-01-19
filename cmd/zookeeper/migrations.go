@@ -1,13 +1,12 @@
 package main
 
 import (
-	"log/slog"
-
-	"github.com/ecumenos/ecumenos/internal/fxpostgres/migrations"
+	"github.com/ecumenos/ecumenos/internal/fxlogger"
 	"github.com/ecumenos/ecumenos/internal/zerodowntime"
+	"github.com/ecumenos/ecumenos/zookeeper"
+	"github.com/ecumenos/ecumenos/zookeeper/config"
 	cli "github.com/urfave/cli/v2"
 	"go.uber.org/fx"
-	"go.uber.org/zap"
 )
 
 var migrateUpCmd = &cli.Command{
@@ -16,22 +15,21 @@ var migrateUpCmd = &cli.Command{
 	Flags: []cli.Flag{},
 	Action: func(cctx *cli.Context) error {
 		app := fx.New(
-			fx.Invoke(func(shutdowner fx.Shutdowner) error {
-				l, err := newLogger(cctx.Bool("prod"))
-				if err != nil {
-					slog.Error("create logger error", "err", err)
-					_ = shutdowner.Shutdown()
-					return err
-				}
+			fx.Options(fx.Provide(func() configuration {
+				cfg := config.NewDefault()
+				cfg.Prod = cctx.Bool("prod")
+				cfg.PostgresURL = cctx.String("pg_url")
+				cfg.JWTSecret = []byte(cctx.String("jwt_secret"))
 
-				migrationsPath := "file://zookeeper/migrations"
-				fn := migrations.NewMigrateUpFunc()
-				if !cctx.Bool("prod") {
-					l.Info("runnning migrate up",
-						zap.String("db_url", cctx.String("pg_url")),
-						zap.String("source_path", migrationsPath))
+				return configuration{
+					Config:       cfg,
+					LoggerConfig: &fxlogger.Config{Prod: cctx.Bool("prod")},
 				}
-				return fn(migrationsPath, cctx.String("pg_url")+"?sslmode=disable", l, shutdowner)
+			})),
+			zookeeper.Module,
+			fxlogger.Module,
+			fx.Invoke(func(runner *zookeeper.MigrationsRunner) error {
+				return runner.MigrateUp()
 			}),
 		)
 
@@ -45,22 +43,21 @@ var migrateDownCmd = &cli.Command{
 	Flags: []cli.Flag{},
 	Action: func(cctx *cli.Context) error {
 		app := fx.New(
-			fx.Invoke(func(shutdowner fx.Shutdowner) error {
-				l, err := newLogger(cctx.Bool("prod"))
-				if err != nil {
-					slog.Error("create logger error", "err", err)
-					_ = shutdowner.Shutdown()
-					return err
-				}
+			fx.Options(fx.Provide(func() configuration {
+				cfg := config.NewDefault()
+				cfg.Prod = cctx.Bool("prod")
+				cfg.PostgresURL = cctx.String("pg_url")
+				cfg.JWTSecret = []byte(cctx.String("jwt_secret"))
 
-				migrationsPath := "file://zookeeper/migrations"
-				fn := migrations.NewMigrateDownFunc()
-				if !cctx.Bool("prod") {
-					l.Info("runnning migrate down",
-						zap.String("db_url", cctx.String("pg_url")),
-						zap.String("source_path", migrationsPath))
+				return configuration{
+					Config:       cfg,
+					LoggerConfig: &fxlogger.Config{Prod: cctx.Bool("prod")},
 				}
-				return fn(migrationsPath, cctx.String("pg_url")+"?sslmode=disable", l, shutdowner)
+			})),
+			zookeeper.Module,
+			fxlogger.Module,
+			fx.Invoke(func(runner *zookeeper.MigrationsRunner) error {
+				return runner.MigrateDown()
 			}),
 		)
 

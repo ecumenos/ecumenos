@@ -1,6 +1,7 @@
-package zookeeper
+package httputils
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -55,7 +56,11 @@ func NewRecoverMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory) func
 	}
 }
 
-func NewAdminAuthorizationMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory, z *Zookeeper) func(next http.Handler) http.Handler {
+type Authorizer interface {
+	Authorize(ctx context.Context, token string) (int64, int64, error)
+}
+
+func NewAdminAuthorizationMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory, auth Authorizer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(rw http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -68,7 +73,7 @@ func NewAdminAuthorizationMiddleware(logger *zap.Logger, rf fxresponsefactory.Fa
 				logger.Error("can not extract JWT token from request", zap.Error(err))
 				return
 			}
-			adminID, session, err := z.Authorize(ctx, token)
+			adminID, sessionID, err := auth.Authorize(ctx, token)
 			if err != nil {
 				_ = writer.WriteFail(ctx, nil, fxresponsefactory.WithHTTPStatusCode(http.StatusUnauthorized),
 					fxresponsefactory.WithCause(err), fxresponsefactory.WithMessage("failed to authorize")) //nolint:errcheck
@@ -76,7 +81,7 @@ func NewAdminAuthorizationMiddleware(logger *zap.Logger, rf fxresponsefactory.Fa
 				return
 			}
 			ctx = contextutils.SetValue(ctx, contextutils.AdminIDKey, fmt.Sprint(adminID))
-			ctx = contextutils.SetValue(ctx, contextutils.AdminSessionIDKey, fmt.Sprint(session.ID))
+			ctx = contextutils.SetValue(ctx, contextutils.AdminSessionIDKey, fmt.Sprint(sessionID))
 
 			next.ServeHTTP(rw, r.WithContext(ctx))
 		}
