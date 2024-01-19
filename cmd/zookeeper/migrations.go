@@ -3,8 +3,8 @@ package main
 import (
 	"log/slog"
 
-	"github.com/ecumenos/fxecumenos/fxpostgres/migrations"
-	"github.com/ecumenos/fxecumenos/zerodowntime"
+	"github.com/ecumenos/ecumenos/internal/fxpostgres/migrations"
+	"github.com/ecumenos/ecumenos/internal/zerodowntime"
 	cli "github.com/urfave/cli/v2"
 	"go.uber.org/fx"
 	"go.uber.org/zap"

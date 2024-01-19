@@ -3,14 +3,14 @@ package orbissocius
 import (
 	"context"
 
-	"github.com/ecumenos/fxecumenos"
-	"github.com/ecumenos/fxecumenos/fxpostgres/postgres"
+	"github.com/ecumenos/ecumenos/internal/fxpostgres/postgres"
+	"github.com/ecumenos/ecumenos/internal/fxtypes"
 	"go.uber.org/zap"
 )
 
 var (
-	ServiceName    fxecumenos.ServiceName = "orbis-socius"
-	ServiceVersion fxecumenos.Version     = "v0.0.0"
+	ServiceName    fxtypes.ServiceName = "orbis-socius"
+	ServiceVersion fxtypes.Version     = "v0.0.0"
 )
 
 type Config struct {

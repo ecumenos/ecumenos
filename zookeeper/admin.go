@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ecumenos/fxecumenos/fxrf"
+	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -14,31 +14,39 @@ type AdminServer struct {
 	zookeeper       *Zookeeper
 	server          *http.Server
 	logger          *zap.Logger
-	responseFactory fxrf.Factory
+	responseFactory fxresponsefactory.Factory
 }
 
 func NewAdminServer(cfg *Config, z *Zookeeper, l *zap.Logger) *AdminServer {
-	responseFactory := fxrf.NewFactory(l, &fxrf.Config{WriteLogs: !cfg.Prod}, ServiceVersion)
+	responseFactory := fxresponsefactory.NewFactory(l, &fxresponsefactory.Config{WriteLogs: !cfg.Prod}, ServiceVersion)
 	s := &AdminServer{
 		zookeeper:       z,
 		logger:          l,
 		responseFactory: responseFactory,
 	}
 
-	router := mux.NewRouter()
+	r := mux.NewRouter().PathPrefix("/api/admin").Subrouter()
 	enrichContext := NewEnrichContextMiddleware(l, responseFactory)
 	recovery := NewRecoverMiddleware(l, responseFactory)
-	router.Use(mux.MiddlewareFunc(enrichContext))
-	router.HandleFunc("/api/admin/info", s.Info).Methods(http.MethodGet)
-	router.HandleFunc("/api/admin/health", s.Health).Methods(http.MethodGet)
-	router.Use(mux.CORSMethodMiddleware(router))
-	router.Use(mux.MiddlewareFunc(recovery))
+	r.Use(mux.MiddlewareFunc(enrichContext))
+	r.HandleFunc("/info", s.Info).Methods(http.MethodGet)
+	r.HandleFunc("/health", s.Health).Methods(http.MethodGet)
+	r.HandleFunc("/sign-in", s.SignIn).Methods(http.MethodPost)
+	r.HandleFunc("/refresh-session", s.RefreshSession).Methods(http.MethodPost)
+	r.Use(mux.CORSMethodMiddleware(r))
+	r.Use(mux.MiddlewareFunc(recovery))
+
+	guarded := r.NewRoute().Subrouter()
+	auth := NewAdminAuthorizationMiddleware(l, responseFactory, z)
+	guarded.Use(mux.MiddlewareFunc(auth))
+	guarded.HandleFunc("/sign-out", s.SignOut).Methods(http.MethodDelete)
+
 	s.server = &http.Server{
 		Addr:         cfg.Addr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  15 * time.Second,
-		Handler:      http.TimeoutHandler(router, 30*time.Second, "something went wrong"),
+		Handler:      http.TimeoutHandler(r, 30*time.Second, "something went wrong"),
 	}
 
 	return s

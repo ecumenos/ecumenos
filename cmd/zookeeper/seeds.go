@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/ecumenos/ecumenos/internal/zerodowntime"
 	models "github.com/ecumenos/ecumenos/models/zookeeper"
 	"github.com/ecumenos/ecumenos/zookeeper"
-	"github.com/ecumenos/fxecumenos/zerodowntime"
 	cli "github.com/urfave/cli/v2"
 	"go.uber.org/fx"
 	"go.uber.org/zap"

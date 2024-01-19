@@ -9,21 +9,21 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/ecumenos/ecumenos/internal/fxpostgres/postgres"
+	"github.com/ecumenos/ecumenos/internal/fxtypes"
+	"github.com/ecumenos/ecumenos/internal/toolkit/errorsutils"
+	"github.com/ecumenos/ecumenos/internal/toolkit/primitives"
+	"github.com/ecumenos/ecumenos/internal/toolkit/random"
+	"github.com/ecumenos/ecumenos/internal/toolkit/timeutils"
 	commonModels "github.com/ecumenos/ecumenos/models"
 	models "github.com/ecumenos/ecumenos/models/zookeeper"
-	"github.com/ecumenos/ecumenos/utils/snowflake"
-	"github.com/ecumenos/fxecumenos"
-	"github.com/ecumenos/fxecumenos/fxpostgres/postgres"
-	"github.com/ecumenos/go-toolkit/errorsutils"
-	"github.com/ecumenos/go-toolkit/primitives"
-	"github.com/ecumenos/go-toolkit/timeutils"
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/zap"
 )
 
 var (
-	ServiceName    fxecumenos.ServiceName = "zookeeper"
-	ServiceVersion fxecumenos.Version     = "v0.0.0"
+	ServiceName    fxtypes.ServiceName = "zookeeper"
+	ServiceVersion fxtypes.Version     = "v0.0.0"
 )
 
 type Config struct {
@@ -135,7 +135,7 @@ func (z *Zookeeper) CreateAdminRole(ctx context.Context, name string, permission
 }
 
 func (z *Zookeeper) insertAdminRole(ctx context.Context, name string, permissions models.AdminRolePermissions, creatorID int64) (*models.AdminRole, error) {
-	id, err := snowflake.GetSnowflakeID[models.AdminRole](ctx, 0, z.getAdminRoleByID)
+	id, err := random.GetSnowflakeID[models.AdminRole](ctx, 0, z.getAdminRoleByID)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (z *Zookeeper) getAdminRoleByName(ctx context.Context, name string) (*model
 }
 
 func (z *Zookeeper) insertAdmin(ctx context.Context, email, passwordHash string) (*models.Admin, error) {
-	id, err := snowflake.GetSnowflakeID[models.Admin](ctx, 0, z.getAdminByID)
+	id, err := random.GetSnowflakeID[models.Admin](ctx, 0, z.getAdminByID)
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +428,7 @@ func (z *Zookeeper) Authorize(ctx context.Context, token string) (int64, *models
 }
 
 func (z *Zookeeper) insertAdminSession(ctx context.Context, adminID int64, t, rt string, expiredAt time.Time) (*models.AdminSession, error) {
-	id, err := snowflake.GetSnowflakeID[models.AdminSession](ctx, 0, z.getAdminSessionByID)
+	id, err := random.GetSnowflakeID[models.AdminSession](ctx, 0, z.getAdminSessionByID)
 	if err != nil {
 		return nil, err
 	}

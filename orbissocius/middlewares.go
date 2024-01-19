@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ecumenos/fxecumenos/fxrf"
-	"github.com/ecumenos/go-toolkit/contextutils"
-	"github.com/ecumenos/go-toolkit/httputils"
-	"github.com/ecumenos/go-toolkit/netutils"
+	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
+	"github.com/ecumenos/ecumenos/internal/toolkit/contextutils"
+	"github.com/ecumenos/ecumenos/internal/toolkit/httputils"
+	"github.com/ecumenos/ecumenos/internal/toolkit/netutils"
 	"go.uber.org/zap"
 )
 
-func NewEnrichContextMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next http.Handler) http.Handler {
+func NewEnrichContextMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(rw http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -35,7 +35,7 @@ func NewEnrichContextMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next h
 	}
 }
 
-func NewRecoverMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next http.Handler) http.Handler {
+func NewRecoverMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(rw http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -43,7 +43,7 @@ func NewRecoverMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next http.Ha
 			defer func() {
 				if err := recover(); err != nil {
 					_ = rf.NewWriter(rw).WriteError(ctx, "something went wrong", fmt.Errorf("unexpected error (err=%v)", err)) //nolint:errcheck
-					logger.Error("can not get request duration", zap.Any("err", err))
+					logger.Error("recovering after panic", zap.Any("err", err))
 					return
 				}
 			}()

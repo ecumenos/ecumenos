@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/ecumenos/ecumenos/internal/fxlogger/logger"
+	"github.com/ecumenos/ecumenos/internal/zerodowntime"
 	"github.com/ecumenos/ecumenos/orbissocius"
-	"github.com/ecumenos/fxecumenos/fxlogger/logger"
-	"github.com/ecumenos/fxecumenos/zerodowntime"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 

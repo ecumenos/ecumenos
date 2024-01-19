@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ecumenos/fxecumenos/fxrf"
-	"github.com/ecumenos/go-toolkit/contextutils"
-	"github.com/ecumenos/go-toolkit/httputils"
-	"github.com/ecumenos/go-toolkit/netutils"
+	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
+	"github.com/ecumenos/ecumenos/internal/toolkit/contextutils"
+	"github.com/ecumenos/ecumenos/internal/toolkit/httputils"
+	"github.com/ecumenos/ecumenos/internal/toolkit/netutils"
 	"go.uber.org/zap"
 )
 
-func NewEnrichContextMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next http.Handler) http.Handler {
+func NewEnrichContextMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(rw http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -26,7 +26,7 @@ func NewEnrichContextMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next h
 			}
 			ctx = contextutils.SetValue(ctx, contextutils.IPAddressKey, ip)
 			ctx = contextutils.SetValue(ctx, contextutils.RequestIDKey, httputils.ExtractRequestID(r))
-			ctx = contextutils.SetValue(ctx, contextutils.StartRequestTimestampKey, fmt.Sprint(time.Now().UnixNano()))
+			ctx = contextutils.SetValue(ctx, contextutils.StartRequestTimestampKey, fmt.Sprint(time.Now().Unix()))
 
 			next.ServeHTTP(rw, r.WithContext(ctx))
 		}
@@ -35,7 +35,7 @@ func NewEnrichContextMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next h
 	}
 }
 
-func NewRecoverMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next http.Handler) http.Handler {
+func NewRecoverMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(rw http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -43,7 +43,7 @@ func NewRecoverMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next http.Ha
 			defer func() {
 				if err := recover(); err != nil {
 					_ = rf.NewWriter(rw).WriteError(ctx, "something went wrong", fmt.Errorf("unexpected error (err=%v)", err)) //nolint:errcheck
-					logger.Error("can not get request duration", zap.Any("err", err))
+					logger.Error("recovering after panic", zap.Any("err", err))
 					return
 				}
 			}()
@@ -55,7 +55,7 @@ func NewRecoverMiddleware(logger *zap.Logger, rf fxrf.Factory) func(next http.Ha
 	}
 }
 
-func NewAdminAuthorizationMiddleware(logger *zap.Logger, rf fxrf.Factory, z *Zookeeper) func(next http.Handler) http.Handler {
+func NewAdminAuthorizationMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory, z *Zookeeper) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(rw http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -63,15 +63,15 @@ func NewAdminAuthorizationMiddleware(logger *zap.Logger, rf fxrf.Factory, z *Zoo
 
 			token, err := httputils.ExtractJWTBearerToken(r)
 			if err != nil {
-				_ = writer.WriteFail(ctx, nil, fxrf.WithHTTPStatusCode(http.StatusUnauthorized),
-					fxrf.WithCause(err), fxrf.WithMessage("failed to get token")) //nolint:errcheck
+				_ = writer.WriteFail(ctx, nil, fxresponsefactory.WithHTTPStatusCode(http.StatusUnauthorized),
+					fxresponsefactory.WithCause(err), fxresponsefactory.WithMessage("failed to get token")) //nolint:errcheck
 				logger.Error("can not extract JWT token from request", zap.Error(err))
 				return
 			}
 			adminID, session, err := z.Authorize(ctx, token)
 			if err != nil {
-				_ = writer.WriteFail(ctx, nil, fxrf.WithHTTPStatusCode(http.StatusUnauthorized),
-					fxrf.WithCause(err), fxrf.WithMessage("failed to authorize")) //nolint:errcheck
+				_ = writer.WriteFail(ctx, nil, fxresponsefactory.WithHTTPStatusCode(http.StatusUnauthorized),
+					fxresponsefactory.WithCause(err), fxresponsefactory.WithMessage("failed to authorize")) //nolint:errcheck
 				logger.Error("can not authorize", zap.Error(err))
 				return
 			}
