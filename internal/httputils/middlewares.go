@@ -25,9 +25,9 @@ func NewEnrichContextMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory
 				logger.Error("can not extract IP address from request", zap.Error(err))
 				return
 			}
-			ctx = contextutils.SetValue(ctx, contextutils.IPAddressKey, ip)
-			ctx = contextutils.SetValue(ctx, contextutils.RequestIDKey, httputils.ExtractRequestID(r))
-			ctx = contextutils.SetValue(ctx, contextutils.StartRequestTimestampKey, fmt.Sprint(time.Now().Unix()))
+			ctx = contextutils.SetIPAddress(ctx, ip)
+			ctx = contextutils.SetRequestID(ctx, httputils.ExtractRequestID(r))
+			ctx = contextutils.SetStartRequestTimestamp(ctx, time.Now())
 
 			next.ServeHTTP(rw, r.WithContext(ctx))
 		}
@@ -80,8 +80,8 @@ func NewAdminAuthorizationMiddleware(logger *zap.Logger, rf fxresponsefactory.Fa
 				logger.Error("can not authorize", zap.Error(err))
 				return
 			}
-			ctx = contextutils.SetValue(ctx, contextutils.AdminIDKey, fmt.Sprint(adminID))
-			ctx = contextutils.SetValue(ctx, contextutils.AdminSessionIDKey, fmt.Sprint(sessionID))
+			ctx = contextutils.SetAdminID(ctx, adminID)
+			ctx = contextutils.SetAdminSessionID(ctx, sessionID)
 
 			next.ServeHTTP(rw, r.WithContext(ctx))
 		}

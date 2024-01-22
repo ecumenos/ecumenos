@@ -11,8 +11,8 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
-type authorization struct {
-	jwtSigningKey []byte
+type Authorization struct {
+	JWTSigningKey []byte
 }
 
 func makeToken(subject string, scope string, exp time.Time) jwt.Token {
@@ -25,7 +25,7 @@ func makeToken(subject string, scope string, exp time.Time) jwt.Token {
 	return tok
 }
 
-func (a *authorization) createAdminTokens(ctx context.Context, adminID int64, tokExp, refTokExp time.Time) (string, string, error) {
+func (a *Authorization) CreateAdminTokens(ctx context.Context, adminID int64, tokExp, refTokExp time.Time) (string, string, error) {
 	accessTok := makeToken(fmt.Sprint(adminID), "access", tokExp)
 	refreshTok := makeToken(fmt.Sprint(adminID), "refresh", refTokExp)
 
@@ -33,12 +33,12 @@ func (a *authorization) createAdminTokens(ctx context.Context, adminID int64, to
 	rand.Read(rval)
 	refreshTok.Set("jti", base64.StdEncoding.EncodeToString(rval))
 
-	accSig, err := jwt.Sign(accessTok, jwt.WithKey(jwa.HS256, a.jwtSigningKey))
+	accSig, err := jwt.Sign(accessTok, jwt.WithKey(jwa.HS256, a.JWTSigningKey))
 	if err != nil {
 		return "", "", fmt.Errorf("signing access token: %w", err)
 	}
 
-	refSig, err := jwt.Sign(refreshTok, jwt.WithKey(jwa.HS256, a.jwtSigningKey))
+	refSig, err := jwt.Sign(refreshTok, jwt.WithKey(jwa.HS256, a.JWTSigningKey))
 	if err != nil {
 		return "", "", fmt.Errorf("signing refresh token: %w", err)
 	}
@@ -46,10 +46,14 @@ func (a *authorization) createAdminTokens(ctx context.Context, adminID int64, to
 	return string(accSig), string(refSig), nil
 }
 
-func (a *authorization) getExpiredAt() (forToken, forRefreshToken time.Time) {
+func (a *Authorization) GetExpiredAt() (forToken, forRefreshToken time.Time) {
 	return time.Now().Add(24 * time.Hour), time.Now().Add(7 * 24 * time.Hour)
 }
 
-func (a *authorization) decodeToken(token string) (jwt.Token, error) {
-	return jwt.ParseString(token, jwt.WithVerify(true), jwt.WithValidate(true))
+func (a *Authorization) DecodeToken(token string) (jwt.Token, error) {
+	t, err := jwt.ParseString(token, jwt.WithVerify(false), jwt.WithValidate(true))
+	if err != nil {
+		return nil, fmt.Errorf("decode token err: %w", err)
+	}
+	return t, nil
 }

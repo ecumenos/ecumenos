@@ -24,9 +24,9 @@ func NewEnrichContextMiddleware(logger *zap.Logger, rf fxresponsefactory.Factory
 				logger.Error("can not extract IP address from request", zap.Error(err))
 				return
 			}
-			ctx = contextutils.SetValue(ctx, contextutils.IPAddressKey, ip)
-			ctx = contextutils.SetValue(ctx, contextutils.RequestIDKey, httputils.ExtractRequestID(r))
-			ctx = contextutils.SetValue(ctx, contextutils.StartRequestTimestampKey, fmt.Sprint(time.Now().UnixNano()))
+			ctx = contextutils.SetIPAddress(ctx, ip)
+			ctx = contextutils.SetRequestID(ctx, httputils.ExtractRequestID(r))
+			ctx = contextutils.SetStartRequestTimestamp(ctx, time.Now())
 
 			next.ServeHTTP(rw, r.WithContext(ctx))
 		}

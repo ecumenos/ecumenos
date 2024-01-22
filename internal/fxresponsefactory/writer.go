@@ -232,7 +232,7 @@ func (w *writer) getMetadata(ctx context.Context) (*Metadata, error) {
 	}
 
 	return &Metadata{
-		RequestID: contextutils.GetValueFromContext(ctx, contextutils.RequestIDKey),
+		RequestID: contextutils.GetRequestID(ctx),
 		Timestamp: timeutils.TimeToString(time.Now()),
 		Duration:  duration,
 		Version:   string(w.appVersion),

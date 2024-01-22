@@ -15,18 +15,18 @@ import (
 
 type Service struct {
 	repo *repository.Repository
-	auth *authorization
+	auth *Authorization
 }
 
 func New(repo *repository.Repository, cfg *config.Config) *Service {
 	return &Service{
 		repo: repo,
-		auth: &authorization{jwtSigningKey: cfg.JWTSecret},
+		auth: &Authorization{JWTSigningKey: cfg.JWTSecret},
 	}
 }
 
 func (s *Service) CreateAdmin(ctx context.Context, email, password string) (*models.Admin, error) {
-	passwordHash, err := getPasswordHash(password)
+	passwordHash, err := hashPassword(password)
 	if err != nil {
 		return nil, err
 	}
@@ -34,35 +34,14 @@ func (s *Service) CreateAdmin(ctx context.Context, email, password string) (*mod
 	return s.repo.InsertAdmin(ctx, email, passwordHash)
 }
 
-var staticSalt = "aZedf4a"
-
-func hash(in string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(staticSalt+in), 14)
-	if err != nil {
-		return "", err
-	}
-
-	return string(bytes), nil
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
-func getPasswordHash(password string) (string, error) {
-	if err := models.VerifyPassword(password); err != nil {
-		return "", err
-	}
-	return hash(password)
-}
-
-func validatePassword(password, passwordHash string) error {
-	hashed, err := getPasswordHash(password)
-	if err != nil {
-		return err
-	}
-
-	if hashed != passwordHash {
-		return errors.New("passwords doesn't match")
-	}
-
-	return nil
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func (s *Service) CreateAdminRole(ctx context.Context, name string, permissions models.AdminRolePermissions, creatorID int64) (*models.AdminRole, error) {
@@ -83,35 +62,22 @@ func (s *Service) ValidateAdminCredentials(ctx context.Context, email, password 
 		return err
 	}
 	if a == nil {
-		return errors.New("email or password is invalid")
+		return errors.New("email is invalid")
 	}
-	if err := validatePassword(password, a.PasswordHash); err != nil {
-		return errors.New("email or password is invalid")
+	fmt.Println("admin:", a)
+	if ok := checkPasswordHash(password, a.PasswordHash); !ok {
+		return errors.New("password is invalid")
 	}
 
 	return nil
 }
 
-func (s *Service) CreateAdminSession(ctx context.Context, adminID int64) (*models.AdminSession, error) {
-	a, err := s.repo.GetAdminByID(ctx, adminID)
-	if err != nil {
-		return nil, err
-	}
-	if a == nil {
-		return nil, fmt.Errorf("failed create session for not existing admin (id = %v)", adminID)
-	}
-
-	tokExp, refTokExp := s.auth.getExpiredAt()
-	token, refreshToken, err := s.auth.createAdminTokens(ctx, adminID, tokExp, refTokExp)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.repo.InsertAdminSession(ctx, adminID, token, refreshToken, refTokExp)
+func (s *Service) GetAdminByEmail(ctx context.Context, email string) (*models.Admin, error) {
+	return s.repo.GetAdminByEmail(ctx, email)
 }
 
 func (s *Service) Authorize(ctx context.Context, token string) (int64, int64, error) {
-	t, err := s.auth.decodeToken(token)
+	t, err := s.auth.DecodeToken(token)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -122,6 +88,28 @@ func (s *Service) Authorize(ctx context.Context, token string) (int64, int64, er
 	}
 
 	session, err := s.repo.GetAdminSessionByAdminIDAndToken(ctx, adminID, token)
+	if err != nil {
+		return 0, 0, err
+	}
+	if session == nil {
+		return 0, 0, fmt.Errorf("admin session is not found (admin id = %v)", adminID)
+	}
+
+	return adminID, session.ID, nil
+}
+
+func (s *Service) AuthorizeWithRefreshToken(ctx context.Context, refreshToken string) (int64, int64, error) {
+	t, err := s.auth.DecodeToken(refreshToken)
+	if err != nil {
+		return 0, 0, err
+	}
+	subject := t.Subject()
+	adminID, err := primitives.StringToInt64(subject)
+	if err != nil {
+		return 0, 0, fmt.Errorf("token is corrupted (extracted subject = %v)", subject)
+	}
+
+	session, err := s.repo.GetAdminSessionByAdminIDAndRefreshToken(ctx, adminID, refreshToken)
 	if err != nil {
 		return 0, 0, err
 	}

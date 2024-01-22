@@ -11,7 +11,7 @@ type GetHealthRespData struct {
 func (s *Server) Health(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	writer := s.responseFactory.NewWriter(rw)
-	writer.WriteSuccess(ctx, GetHealthRespData{Ok: true})
+	_ = writer.WriteSuccess(ctx, GetHealthRespData{Ok: true}) //nolint:errcheck
 }
 
 type GetInfoRespData struct {
@@ -24,7 +24,7 @@ func (s *Server) Info(rw http.ResponseWriter, r *http.Request) {
 
 	result := s.service.PingServices(ctx)
 	writer := s.responseFactory.NewWriter(rw)
-	writer.WriteSuccess(ctx, GetInfoRespData{
+	_ = writer.WriteSuccess(ctx, GetInfoRespData{ //nolint:errcheck
 		Name:              string(s.serviceName),
 		PostgresIsRunning: result.PostgresIsRunning,
 	})

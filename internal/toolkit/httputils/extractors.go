@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ecumenos/ecumenos/internal/toolkit/contextutils"
-	"github.com/ecumenos/ecumenos/internal/toolkit/primitives"
 	"github.com/ecumenos/ecumenos/internal/toolkit/random"
 )
 
@@ -21,17 +20,12 @@ func ExtractRequestID(r *http.Request) string {
 }
 
 func GetRequestDuration(ctx context.Context) (time.Duration, error) {
-	str := contextutils.GetValueFromContext(ctx, contextutils.StartRequestTimestampKey)
-	if str == "" {
-		return 0, nil
+	start, ok := contextutils.GetStartRequestTimestamp(ctx)
+	if !ok {
+		return 0, errors.New("start request wasn't set correctly")
 	}
-	start, err := primitives.StringToInt64(str)
-	if err != nil {
-		return 0, err
-	}
-	diff := time.Now().Unix() - start
 
-	return time.Duration(diff) * time.Second, nil
+	return time.Since(start), nil
 }
 
 func ExtractJWTBearerToken(r *http.Request) (string, error) {
