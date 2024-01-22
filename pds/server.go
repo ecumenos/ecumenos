@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ecumenos/fxecumenos/fxrf"
+	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -14,11 +14,11 @@ type Server struct {
 	pds             *PDS
 	server          *http.Server
 	logger          *zap.Logger
-	responseFactory fxrf.Factory
+	responseFactory fxresponsefactory.Factory
 }
 
 func NewServer(cfg *Config, pds *PDS, l *zap.Logger) *Server {
-	responseFactory := fxrf.NewFactory(l, &fxrf.Config{WriteLogs: !cfg.Prod}, ServiceVersion)
+	responseFactory := fxresponsefactory.NewFactory(l, &fxresponsefactory.Config{WriteLogs: !cfg.Prod}, ServiceVersion)
 	s := &Server{
 		pds:             pds,
 		logger:          l,

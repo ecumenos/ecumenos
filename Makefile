@@ -1,5 +1,6 @@
-GOPRIVATE=github.com/ecumenos
-SHELL=/bin/sh
+export GOPRIVATE=github.com/ecumenos
+export SHELL=/bin/sh
+export GOEXPERIMENT := loopvar
 
 .PHONY: all
 all: tidy check fmt lint test mock tidy
@@ -52,15 +53,15 @@ mock_clean:
 # PDS
 .PHONY: run-dev-pds
 run-dev-pds: .env ## Runs pds for local dev
-	export API_LOCAL=true && go run cmd/pds/main.go run-api-server
+	export API_LOCAL=true && go run cmd/pds/*.go run-api-server
 
 .PHONY: migrate-up-pds
 migrate-up-pds: .env
-	export API_LOCAL=true && go run cmd/pds/main.go migrate-up
+	export API_LOCAL=true && go run cmd/pds/*.go migrate-up
 
 .PHONY: migrate-down-pds
 migrate-down-pds: .env
-	export API_LOCAL=true && go run cmd/pds/main.go migrate-down
+	export API_LOCAL=true && go run cmd/pds/*.go migrate-down
 
 .PHONY: build-pds-image
 build-pds-image:
@@ -73,15 +74,15 @@ run-pds-image:
 # Orbis Socius
 .PHONY: run-dev-orbis-socius
 run-dev-orbis-socius: .env ## Runs orbis socius for local dev
-	export API_LOCAL=true && go run cmd/orbissocius/main.go run-api-server
+	export API_LOCAL=true && go run cmd/orbissocius/*.go run-api-server
 
 .PHONY: migrate-up-orbis-socius
 migrate-up-orbis-socius: .env
-	export API_LOCAL=true && go run cmd/orbissocius/main.go migrate-up
+	export API_LOCAL=true && go run cmd/orbissocius/*.go migrate-up
 
 .PHONY: migrate-down-orbis-socius
 migrate-down-orbis-socius: .env
-	export API_LOCAL=true && go run cmd/orbissocius/main.go migrate-down
+	export API_LOCAL=true && go run cmd/orbissocius/*.go migrate-down
 
 .PHONY: build-orbis-socius-image
 build-orbis-socius-image:
@@ -94,15 +95,23 @@ run-orbis-socius-image:
 # Zookeeper
 .PHONY: run-dev-zookeeper
 run-dev-zookeeper: .env ## Runs zookeeper for local dev
-	export API_LOCAL=true && go run cmd/zookeeper/main.go run-api-server
+	export API_LOCAL=true && go run cmd/zookeeper/*.go run-api-server
+
+.PHONY: run-dev-zookeeper-admin
+run-dev-zookeeper-admin: .env ## Runs zookeeper-admin for local dev
+	export API_LOCAL=true && go run cmd/zookeeper/*.go run-admin-server
 
 .PHONY: migrate-up-zookeeper
 migrate-up-zookeeper: .env
-	export API_LOCAL=true && go run cmd/zookeeper/main.go migrate-up
+	export API_LOCAL=true && go run cmd/zookeeper/*.go migrate-up
 
 .PHONY: migrate-down-zookeeper
 migrate-down-zookeeper: .env
-	export API_LOCAL=true && go run cmd/zookeeper/main.go migrate-down
+	export API_LOCAL=true && go run cmd/zookeeper/*.go migrate-down
+
+.PHONY: seeds-zookeeper
+seeds-zookeeper: .env
+	export API_LOCAL=true && go run cmd/zookeeper/*.go run-seeds
 
 .PHONY: build-zookeeper-image
 build-zookeeper-image:

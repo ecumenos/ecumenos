@@ -5,11 +5,13 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/ecumenos/ecumenos/internal/fxlogger"
+	"github.com/ecumenos/ecumenos/internal/zerodowntime"
 	"github.com/ecumenos/ecumenos/zookeeper"
-	"github.com/ecumenos/fxecumenos/fxlogger/logger"
-	"github.com/ecumenos/fxecumenos/zerodowntime"
+	"github.com/ecumenos/ecumenos/zookeeper/admin"
+	"github.com/ecumenos/ecumenos/zookeeper/app"
+	"github.com/ecumenos/ecumenos/zookeeper/config"
 	"go.uber.org/fx"
-	"go.uber.org/zap"
 
 	cli "github.com/urfave/cli/v2"
 )
@@ -25,7 +27,7 @@ func run(args []string) error {
 	app := cli.App{
 		Name:    "api",
 		Usage:   "serving API",
-		Version: string(zookeeper.ServiceVersion),
+		Version: string(config.ServiceVersion),
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "prod",
@@ -38,58 +40,64 @@ func run(args []string) error {
 				EnvVars: []string{"PG_URL"},
 			},
 		},
-		Commands: []*cli.Command{runAppCmd, runAdminAppCmd},
+		Commands: []*cli.Command{
+			runAppCmd,
+			runAdminAppCmd,
+			migrateUpCmd,
+			migrateDownCmd,
+			runSeedsCmd,
+		},
 	}
 
 	return app.Run(args)
 }
 
+type configuration struct {
+	fx.Out
+
+	Config       *config.Config
+	LoggerConfig *fxlogger.Config
+}
+
 var runAppCmd = &cli.Command{
 	Name:  "run-api-server",
 	Usage: "run API HTTP server",
-	Flags: []cli.Flag{},
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:    "jwt_secret",
+			Usage:   "secret used for authenticating JWT tokens",
+			Value:   "jwtsecretplaceholder",
+			EnvVars: []string{"APP_JWT_SECRET"},
+		},
+	},
 	Action: func(cctx *cli.Context) error {
 		return zerodowntime.HandleApp(fx.New(
-			fx.Invoke(func(lc fx.Lifecycle, shutdowner fx.Shutdowner) {
-				cfg := &zookeeper.Config{
-					Prod:        cctx.Bool("prod"),
-					Addr:        ":9092",
-					PostgresURL: cctx.String("pg_url"),
-				}
-				l, err := newLogger(cctx.Bool("prod"))
-				if err != nil {
-					slog.Error("create logger error", "err", err)
-					_ = shutdowner.Shutdown()
-					return
-				}
-				instance, err := zookeeper.New(cfg, l)
-				if err != nil {
-					slog.Error("create zookeeper instance error", "err", err)
-					_ = shutdowner.Shutdown()
-					return
-				}
-				server := zookeeper.NewServer(cfg, instance, l)
+			fx.Options(fx.Provide(func() configuration {
+				cfg := config.NewDefault()
+				cfg.Prod = cctx.Bool("prod")
+				cfg.PostgresURL = cctx.String("pg_url")
+				cfg.JWTSecret = []byte(cctx.String("jwt_secret"))
 
+				return configuration{
+					Config:       cfg,
+					LoggerConfig: &fxlogger.Config{Prod: cctx.Bool("prod")},
+				}
+			})),
+			zookeeper.Module,
+			fxlogger.Module,
+			fx.Invoke(func(lc fx.Lifecycle, server *app.Server, shutdowner fx.Shutdowner) {
 				lc.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
 						go func() {
-							if err := instance.Start(ctx); err != nil {
-								slog.Error("zookeeper instance run error", "err", err)
-								return
-							}
 							if err := server.Start(ctx); err != nil {
-								slog.Error("zookeeper server run error", "err", err)
+								slog.Error("zookeeper app server run error", "err", err)
 								return
 							}
 						}()
 						return nil
 					},
 					OnStop: func(ctx context.Context) error {
-						if err := server.Shutdown(ctx); err != nil {
-							return err
-						}
-
-						return instance.Shutdown(ctx)
+						return server.Shutdown(ctx)
 					},
 				})
 			}),
@@ -100,37 +108,34 @@ var runAppCmd = &cli.Command{
 var runAdminAppCmd = &cli.Command{
 	Name:  "run-admin-server",
 	Usage: "run Admin HTTP server",
-	Flags: []cli.Flag{},
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:    "jwt_secret",
+			Usage:   "secret used for authenticating JWT tokens",
+			Value:   "jwtsecretplaceholder",
+			EnvVars: []string{"ADMIN_JWT_SECRET"},
+		},
+	},
 	Action: func(cctx *cli.Context) error {
 		return zerodowntime.HandleApp(fx.New(
-			fx.Invoke(func(lc fx.Lifecycle, shutdowner fx.Shutdowner) {
-				cfg := &zookeeper.Config{
-					Prod:        cctx.Bool("prod"),
-					Addr:        ":9192",
-					PostgresURL: cctx.String("pg_url"),
-				}
-				l, err := newLogger(cctx.Bool("prod"))
-				if err != nil {
-					slog.Error("create logger error", "err", err)
-					_ = shutdowner.Shutdown()
-					return
-				}
-				instance, err := zookeeper.New(cfg, l)
-				if err != nil {
-					slog.Error("create zookeeper instance error", "err", err)
-					_ = shutdowner.Shutdown()
-					return
-				}
-				server := zookeeper.NewAdminServer(cfg, instance, l)
+			fx.Options(fx.Provide(func() configuration {
+				cfg := config.NewDefault()
+				cfg.Prod = cctx.Bool("prod")
+				cfg.PostgresURL = cctx.String("pg_url")
+				cfg.JWTSecret = []byte(cctx.String("jwt_secret"))
 
+				return configuration{
+					Config:       cfg,
+					LoggerConfig: &fxlogger.Config{Prod: cctx.Bool("prod")},
+				}
+			})),
+			zookeeper.Module,
+			fxlogger.Module,
+			fx.Invoke(func(lc fx.Lifecycle, adminServer *admin.Server, shutdowner fx.Shutdowner) {
 				lc.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
 						go func() {
-							if err := instance.Start(ctx); err != nil {
-								slog.Error("zookeeper instance run error", "err", err)
-								return
-							}
-							if err := server.Start(ctx); err != nil {
+							if err := adminServer.Start(ctx); err != nil {
 								slog.Error("zookeeper admin server run error", "err", err)
 								return
 							}
@@ -138,30 +143,10 @@ var runAdminAppCmd = &cli.Command{
 						return nil
 					},
 					OnStop: func(ctx context.Context) error {
-						if err := server.Shutdown(ctx); err != nil {
-							return err
-						}
-
-						return instance.Shutdown(ctx)
+						return adminServer.Shutdown(ctx)
 					},
 				})
 			}),
 		))
 	},
-}
-
-func newLogger(prod bool) (*zap.Logger, error) {
-	var l *zap.Logger
-	var err error
-	if prod {
-		l, err = logger.NewProductionLogger(string(zookeeper.ServiceName))
-	} else {
-		l, err = logger.NewDevelopmentLogger(string(zookeeper.ServiceName))
-	}
-	if err != nil {
-		return nil, err
-	}
-	zap.ReplaceGlobals(l)
-
-	return l, nil
 }
