@@ -50,6 +50,7 @@ func New(p serverParams) *Server {
 	router.Use(mux.MiddlewareFunc(enrichContext))
 	router.HandleFunc("/api/info", s.Info).Methods(http.MethodGet)
 	router.HandleFunc("/api/health", s.Health).Methods(http.MethodGet)
+	router.HandleFunc("/api/requests/orbis-socius-launch", s.RequestOrbisSociusLaunch).Methods(http.MethodPost)
 	router.Use(mux.CORSMethodMiddleware(router))
 	router.Use(mux.MiddlewareFunc(recovery))
 	s.server = &http.Server{

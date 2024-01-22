@@ -1,7 +1,10 @@
 package app
 
 import (
+	"errors"
 	"net/http"
+
+	f "github.com/ecumenos/ecumenos/internal/fxresponsefactory"
 )
 
 type GetHealthRespData struct {
@@ -28,4 +31,15 @@ func (s *Server) Info(rw http.ResponseWriter, r *http.Request) {
 		Name:              string(s.serviceName),
 		PostgresIsRunning: result.PostgresIsRunning,
 	})
+}
+
+type RequestOrbisSociusLaunchReq struct {
+	Email string `json:"email"`
+}
+
+func (s *Server) RequestOrbisSociusLaunch(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	writer := s.responseFactory.NewWriter(rw)
+	_ = writer.WriteError(ctx, "not implemented", errors.New("not implemented"), f.WithHTTPStatusCode(http.StatusNotImplemented))
 }
