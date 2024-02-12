@@ -6,6 +6,9 @@ servers:
   - url: '{{.ServerURL}}'
 security:
   - bearerAuth: []
+tags:
+  - description: Endpoints to support developers
+    name: System
 paths:
   /health:
     get:
@@ -53,6 +56,58 @@ paths:
           $ref: ./shared-internal.yaml#/components/responses/Error
         default:
           $ref: ./shared-internal.yaml#/components/responses/Failure
+  /docs:
+    get:
+      description: Returns HTML docs.
+      summary: Returns HTML docs.
+      operationId: getDocs
+      tags:
+        - System
+      responses:
+        '200':
+          description: Pong response.
+          content:
+            text/html:
+              schema:
+                type: string
+        '400':
+          description: Fail response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailureResponseBody'
+        '500':
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+  /spec:
+    get:
+      description: Returns HTML specs.
+      summary: Returns HTML specs.
+      operationId: getSpecs
+      tags:
+        - System
+      responses:
+        '200':
+          description: HTML response.
+          content:
+            text/html:
+              schema:
+                type: string
+        '400':
+          description: Fail response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailureResponseBody'
+        '500':
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
 components:
   schemas:
     ErrorResponseBody:

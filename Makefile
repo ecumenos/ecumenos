@@ -80,6 +80,10 @@ run-pds-image:
 run-dev-orbis-socius: .env ## Runs orbis socius for local dev
 	export API_LOCAL=true && go run cmd/orbissocius/*.go run-api-server
 
+.PHONY: run-dev-orbis-socius-admin
+run-dev-orbis-socius-admin: .env ## Runs orbis socius for local admin
+	export API_LOCAL=true && go run cmd/orbissocius/*.go run-admin-server
+
 .PHONY: migrate-up-orbis-socius
 migrate-up-orbis-socius: .env
 	export API_LOCAL=true && go run cmd/orbissocius/*.go migrate-up

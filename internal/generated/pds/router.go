@@ -13,12 +13,18 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Returns HTML docs.
+	// (GET /docs)
+	GetDocs(w http.ResponseWriter, r *http.Request)
 	// Service Health Check
 	// (GET /health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
 	// Service Info
 	// (GET /info)
 	GetInfo(w http.ResponseWriter, r *http.Request)
+	// Returns HTML specs.
+	// (GET /spec)
+	GetSpecs(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -29,6 +35,23 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetDocs operation middleware
+func (siw *ServerInterfaceWrapper) GetDocs(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetDocs(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
 
 // GetHealth operation middleware
 func (siw *ServerInterfaceWrapper) GetHealth(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +78,23 @@ func (siw *ServerInterfaceWrapper) GetInfo(w http.ResponseWriter, r *http.Reques
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetInfo(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetSpecs operation middleware
+func (siw *ServerInterfaceWrapper) GetSpecs(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSpecs(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -177,9 +217,13 @@ func HandlerWithOptions(si ServerInterface, options GorillaServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.HandleFunc(options.BaseURL+"/docs", wrapper.GetDocs).Methods("GET")
+
 	r.HandleFunc(options.BaseURL+"/health", wrapper.GetHealth).Methods("GET")
 
 	r.HandleFunc(options.BaseURL+"/info", wrapper.GetInfo).Methods("GET")
+
+	r.HandleFunc(options.BaseURL+"/spec", wrapper.GetSpecs).Methods("GET")
 
 	return r
 }

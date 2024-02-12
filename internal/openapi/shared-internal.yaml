@@ -9,8 +9,8 @@ security:
   - bearerAuth: []
 
 tags:
-- description: Endpoints to support devops
-  name: Internal
+- description: Endpoints to support developers
+  name: System
 
 paths:
   /health:
@@ -67,7 +67,7 @@ paths:
       summary: Returns HTML docs.
       operationId: getDocs
       tags:
-        - Internal
+        - System
       responses:
         "200":
           description: Pong response.
@@ -94,7 +94,7 @@ paths:
       summary: Returns HTML specs.
       operationId: getSpecs
       tags:
-        - Internal
+        - System
       responses:
         "200":
           description: HTML response.
