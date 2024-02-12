@@ -219,7 +219,7 @@ func WithLogger(l *zap.Logger) ResponseBuildOption {
 }
 
 type Metadata struct {
-	RequestID string        `json:"requestId"`
+	RequestID string        `json:"request_id"`
 	Duration  time.Duration `json:"duration"`
 	Timestamp string        `json:"timestamp"`
 	Version   string        `json:"version"`

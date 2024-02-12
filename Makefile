@@ -98,7 +98,7 @@ run-dev-zookeeper: .env ## Runs zookeeper for local dev
 	export API_LOCAL=true && go run cmd/zookeeper/*.go run-api-server
 
 .PHONY: run-dev-zookeeper-admin
-run-dev-zookeeper-admin: .env ## Runs zookeeper-admin for local dev
+  : .env ## Runs zookeeper-admin for local dev
 	export API_LOCAL=true && go run cmd/zookeeper/*.go run-admin-server
 
 .PHONY: migrate-up-zookeeper
