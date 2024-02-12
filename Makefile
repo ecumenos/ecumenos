@@ -47,6 +47,10 @@ mock: mock_clean
 mock_clean:
 	find . -name "*.go" -path "**/mocks/*" | while read file; do rm $$file; done;
 
+.PHONY: openapi
+openapi:
+	sh scripts/docs.sh
+
 .env:
 	if [ ! -f ".env" ]; then cp example.dev.env .env; fi
 

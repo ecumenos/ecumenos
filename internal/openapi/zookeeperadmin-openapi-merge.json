@@ -1,0 +1,12 @@
+{
+  "inputs": [
+      { "inputFile": "./zookeeperadmin.yaml" },
+      {
+        "inputFile": "./shared-internal.yaml",
+        "operationSelection": {
+          "excludeTags": ["Internal"]
+        }
+      }
+  ],
+  "output": "./zookeeperadmin-merged.yaml"
+}

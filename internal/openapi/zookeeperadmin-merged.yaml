@@ -1,0 +1,355 @@
+openapi: 3.0.3
+info:
+  title: Zookeeper Admin API
+  version: 0.1.0
+servers:
+  - url: '{{.ServerURL}}'
+security:
+  - bearerAuth: []
+tags:
+  - description: Endpoints for interacting with Zookeeper Admin
+    name: ZookeeperAdmin
+  - description: Endpoints for interacting with Authorization of Zookeeper Admin
+    name: Authorization
+paths:
+  /sign-in:
+    post:
+      tags:
+        - Authorization
+      description: Sign in Zookeeper administrator.
+      summary: Sign In
+      operationId: signIn
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: >-
+                      ./shared-internal.yaml#/components/schemas/JSendResponseObject
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SignInResponseData'
+        '401':
+          $ref: ./shared-internal.yaml#/components/responses/NotAuthorized
+        '403':
+          $ref: ./shared-internal.yaml#/components/responses/Forbidden
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+  /refresh-session:
+    post:
+      tags:
+        - Authorization
+      description: Refresh Zookeeper administrator's session.
+      summary: Refresh Session
+      operationId: refreshSession
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshSessionRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: >-
+                      ./shared-internal.yaml#/components/schemas/JSendResponseObject
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RefreshSessionResponseData'
+        '401':
+          $ref: ./shared-internal.yaml#/components/responses/NotAuthorized
+        '403':
+          $ref: ./shared-internal.yaml#/components/responses/Forbidden
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+  /sign-out:
+    delete:
+      tags:
+        - Authorization
+      description: Sign out Zookeeper administrator.
+      summary: Sign Out
+      operationId: signOut
+      responses:
+        '204':
+          description: Session deleted successfully.
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody: {}
+  /health:
+    get:
+      tags:
+        - System
+      description: Get service health check status.
+      summary: Service Health Check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/JSendResponseObject'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GetHealthData'
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+  /info:
+    get:
+      tags:
+        - System
+      description: Get service information.
+      summary: Service Info
+      operationId: getInfo
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/JSendResponseObject'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GetInfoData'
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+components:
+  schemas:
+    Password:
+      type: string
+      format: password
+      minLength: 8
+      maxLength: 50
+      pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$'
+    SignInRequest:
+      type: object
+      required:
+        - email
+        - password
+      nullable: false
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          $ref: '#/components/schemas/Password'
+    SignInResponseData:
+      type: object
+      required:
+        - token
+        - refresh_token
+        - session_id
+      nullable: false
+      properties:
+        token:
+          type: string
+        refresh_token:
+          type: string
+        session_id:
+          type: number
+    RefreshSessionRequest:
+      type: object
+      required:
+        - refresh_token
+      nullable: false
+      properties:
+        refresh_token:
+          type: string
+    RefreshSessionResponseData:
+      type: object
+      required:
+        - token
+        - refresh_token
+        - session_id
+      nullable: false
+      properties:
+        token:
+          type: string
+        refresh_token:
+          type: string
+        session_id:
+          type: number
+    ErrorResponseBody:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          $ref: '#/components/schemas/ErrorResponseStatus'
+          description: The response status.
+        message:
+          type: string
+          description: 'A meaningful, end-user-readable message, explaining what went wrong.'
+      example:
+        status: error
+        message: ''
+    ResponseStatus:
+      oneOf:
+        - $ref: '#/components/schemas/SuccessResponseStatus'
+        - $ref: '#/components/schemas/FailResponseStatus'
+        - $ref: '#/components/schemas/ErrorResponseStatus'
+    SuccessResponseStatus:
+      type: string
+      enum:
+        - success
+    FailResponseStatus:
+      type: string
+      enum:
+        - fail
+    ErrorResponseStatus:
+      type: string
+      enum:
+        - error
+    FailureResponseBody:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/FailResponseStatus'
+          description: The response status value will be fail
+        message:
+          type: string
+          description: 'A meaningful, end-user-readable message, explaining what went wrong.'
+        data:
+          type: object
+          nullable: true
+      example:
+        status: fail
+        message: ''
+    JSendResponseObject:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          $ref: '#/components/schemas/SuccessResponseStatus'
+        data:
+          type: object
+          nullable: true
+    JSendResponseArray:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          $ref: '#/components/schemas/SuccessResponseStatus'
+        data:
+          type: array
+          nullable: true
+          items:
+            type: object
+            additionalProperties: true
+    GetHealthData:
+      type: object
+      required:
+        - ok
+      properties:
+        ok:
+          type: boolean
+          description: The OK is true if all is okay.
+    GetInfoData:
+      type: object
+      required:
+        - name
+        - version
+        - deps
+      properties:
+        name:
+          type: string
+          description: The Name is the service name.
+        version:
+          type: string
+          description: The Version is the service semver version.
+        deps:
+          type: object
+          nullable: true
+  securitySchemes:
+    bearerAuth:
+      $ref: ./shared-internal.yaml#/components/securitySchemes/bearerAuth
+  responses:
+    Success:
+      description: >-
+        Successfully processed the request. More details on the status of the
+        request can be obtained from the Status property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JSendResponseObject'
+    Failure:
+      description: >-
+        Failed to process the request. More details on the status of the request
+        can be obtained from the Status property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+    Error:
+      description: >-
+        Failed to process the request. More details on the status of the request
+        can be obtained from the Status property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseBody'
+    BadRequest:
+      description: >-
+        Bad Request. More details on the status of the request can be obtained
+        from the Message property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+    NotAuthorized:
+      description: >-
+        Not Authorized. More details on the status of the request can be
+        obtained from the Message property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+    Forbidden:
+      description: >-
+        Forbidden. More details on the status of the request can be obtained
+        from the Message property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+    NotFound:
+      description: >-
+        Not Found. More details on the status of the request can be obtained
+        from the Message property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+  parameters: {}

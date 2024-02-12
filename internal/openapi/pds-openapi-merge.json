@@ -1,0 +1,12 @@
+{
+  "inputs": [
+      { "inputFile": "./pds.yaml" },
+      {
+        "inputFile": "./shared-internal.yaml",
+        "operationSelection": {
+          "excludeTags": ["Internal"]
+        }
+      }
+  ],
+  "output": "./pds-merged.yaml"
+}

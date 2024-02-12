@@ -64,7 +64,6 @@ func (s *Service) ValidateAdminCredentials(ctx context.Context, email, password 
 	if a == nil {
 		return errors.New("email is invalid")
 	}
-	fmt.Println("admin:", a)
 	if ok := checkPasswordHash(password, a.PasswordHash); !ok {
 		return errors.New("password is invalid")
 	}

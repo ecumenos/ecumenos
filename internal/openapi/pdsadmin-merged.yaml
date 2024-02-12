@@ -1,0 +1,216 @@
+openapi: 3.0.3
+info:
+  title: PDS Admin API
+  version: 0.1.0
+servers:
+  - url: '{{.ServerURL}}'
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      description: Get service health check status.
+      summary: Service Health Check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/JSendResponseObject'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GetHealthData'
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+  /info:
+    get:
+      tags:
+        - System
+      description: Get service information.
+      summary: Service Info
+      operationId: getInfo
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/JSendResponseObject'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GetInfoData'
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+components:
+  schemas:
+    ErrorResponseBody:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          $ref: '#/components/schemas/ErrorResponseStatus'
+          description: The response status.
+        message:
+          type: string
+          description: 'A meaningful, end-user-readable message, explaining what went wrong.'
+      example:
+        status: error
+        message: ''
+    ResponseStatus:
+      oneOf:
+        - $ref: '#/components/schemas/SuccessResponseStatus'
+        - $ref: '#/components/schemas/FailResponseStatus'
+        - $ref: '#/components/schemas/ErrorResponseStatus'
+    SuccessResponseStatus:
+      type: string
+      enum:
+        - success
+    FailResponseStatus:
+      type: string
+      enum:
+        - fail
+    ErrorResponseStatus:
+      type: string
+      enum:
+        - error
+    FailureResponseBody:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/FailResponseStatus'
+          description: The response status value will be fail
+        message:
+          type: string
+          description: 'A meaningful, end-user-readable message, explaining what went wrong.'
+        data:
+          type: object
+          nullable: true
+      example:
+        status: fail
+        message: ''
+    JSendResponseObject:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          $ref: '#/components/schemas/SuccessResponseStatus'
+        data:
+          type: object
+          nullable: true
+    JSendResponseArray:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          $ref: '#/components/schemas/SuccessResponseStatus'
+        data:
+          type: array
+          nullable: true
+          items:
+            type: object
+            additionalProperties: true
+    GetHealthData:
+      type: object
+      required:
+        - ok
+      properties:
+        ok:
+          type: boolean
+          description: The OK is true if all is okay.
+    GetInfoData:
+      type: object
+      required:
+        - name
+        - version
+        - deps
+      properties:
+        name:
+          type: string
+          description: The Name is the service name.
+        version:
+          type: string
+          description: The Version is the service semver version.
+        deps:
+          type: object
+          nullable: true
+  securitySchemes:
+    bearerAuth:
+      $ref: ./shared-internal.yaml#/components/securitySchemes/bearerAuth
+  responses:
+    Success:
+      description: >-
+        Successfully processed the request. More details on the status of the
+        request can be obtained from the Status property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JSendResponseObject'
+    Failure:
+      description: >-
+        Failed to process the request. More details on the status of the request
+        can be obtained from the Status property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+    Error:
+      description: >-
+        Failed to process the request. More details on the status of the request
+        can be obtained from the Status property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseBody'
+    BadRequest:
+      description: >-
+        Bad Request. More details on the status of the request can be obtained
+        from the Message property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+    NotAuthorized:
+      description: >-
+        Not Authorized. More details on the status of the request can be
+        obtained from the Message property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+    Forbidden:
+      description: >-
+        Forbidden. More details on the status of the request can be obtained
+        from the Message property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+    NotFound:
+      description: >-
+        Not Found. More details on the status of the request can be obtained
+        from the Message property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponseBody'
+  parameters: {}

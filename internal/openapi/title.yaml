@@ -1,0 +1,10 @@
+openapi: 3.0.1
+# This file is only for use with openapi-merge-cli. It should be included first in the list of files to be merged
+# in order to override the title for the merged spec.
+info:
+  title: Ecumenos Services APIs
+  description: Ecumenos Services API endpoints.
+  version: 0.1.0
+
+security:
+  - bearerAuth: []
