@@ -44,41 +44,6 @@ func (r *Repository) InsertAdminSession(ctx context.Context, adminID int64, t, r
 	}, nil
 }
 
-func (r *Repository) GetAdminSessionByID(ctx context.Context, id int64) (*models.AdminSession, error) {
-	q := fmt.Sprintf(`
-		select
-      id, created_at, updated_at, expired_at, deleted_at, tombstoned, admin_id, token, refresh_token
-    from public.admin_sessions
-		where id=$1 and tombstoned=false;
-	`)
-	row, err := r.driver.QueryRow(ctx, q, id)
-	if err != nil {
-		return nil, err
-	}
-
-	var s models.AdminSession
-	err = row.Scan(
-		&s.ID,
-		&s.CreatedAt,
-		&s.UpdatedAt,
-		&s.ExpiredAt,
-		&s.DeletedAt,
-		&s.Tombstoned,
-		&s.AdminID,
-		&s.Token,
-		&s.RefreshToken,
-	)
-	if err == nil {
-		return &s, nil
-	}
-
-	if errorsutils.Equals(err, pgx.ErrNoRows) {
-		return nil, nil
-	}
-
-	return nil, err
-}
-
 func scanRowAdminSession(row pgx.Row) (*models.AdminSession, error) {
 	var s models.AdminSession
 	err := row.Scan(
@@ -101,6 +66,21 @@ func scanRowAdminSession(row pgx.Row) (*models.AdminSession, error) {
 	}
 
 	return nil, err
+}
+
+func (r *Repository) GetAdminSessionByID(ctx context.Context, id int64) (*models.AdminSession, error) {
+	q := fmt.Sprintf(`
+		select
+      id, created_at, updated_at, expired_at, deleted_at, tombstoned, admin_id, token, refresh_token
+    from public.admin_sessions
+		where id=$1 and tombstoned=false;
+	`)
+	row, err := r.driver.QueryRow(ctx, q, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return scanRowAdminSession(row)
 }
 
 func (r *Repository) GetAdminSessionByAdminIDAndToken(ctx context.Context, adminID int64, token string) (*models.AdminSession, error) {
