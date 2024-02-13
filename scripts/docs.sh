@@ -1,25 +1,7 @@
 #!/bin/sh
 alias redoc='sudo docker run --rm -v $(pwd):/ecum --workdir /ecum ghcr.io/redocly/redoc/cli'
 
-# set working dir
-cd ./internal/openapi
-
-# merge openapi files
-sudo docker run --rm -v "$PWD":/ecum -w /ecum node:20.0.0 npx openapi-merge-cli
-
-# build openapi docs
-redoc build openapi.yaml
-if [[ $? != 0 ]]; then
-    echo "Failed to generate HTML API documentation."
-    exit 1
-fi
-mv redoc-static.html index.html
-cd ../..
 mkdir -p ./internal/docs
-cp ./internal/openapi/index.html ./internal/docs
-# Clean up artifacts
-rm ./internal/openapi/index.html
-rm ./internal/openapi/openapi.yaml
 mkdir -p ./internal/generated
 
 generate_docs()
