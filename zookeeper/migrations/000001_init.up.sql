@@ -80,6 +80,7 @@ create table public.orbes_socii_launch_requests
   region                   text not null,
   orbis_socius_name        text not null,
   orbis_socius_description text not null,
+  orbis_socius_url         text not null,
   status                   integer check (status >= 0) not null
 );
 
@@ -89,6 +90,8 @@ create table public.orbes_socii_launch_invites
   created_at                      timestamp(0) with time zone default current_timestamp not null,
   email                           text not null,
   code                            text not null,
+  api_key                         text not null,
+  used                            boolean not null default false,
   orbis_socius_launch_requests_id bigint references orbes_socii_launch_requests(id),
   expired_at                      timestamp(0) with time zone not null
 );

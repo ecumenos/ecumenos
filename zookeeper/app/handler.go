@@ -65,3 +65,45 @@ func (h *handler) GetSpecs(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%v"`, filename))
 	_, _ = rw.Write(openapi.ZookeeperSpec(h.selfURL))
 }
+
+func (h *handler) GetMe(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	writer := h.responseFactory.NewWriter(rw)
+	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+}
+
+func (h *handler) RefreshSession(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	writer := h.responseFactory.NewWriter(rw)
+	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+}
+
+func (h *handler) SignIn1(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	writer := h.responseFactory.NewWriter(rw)
+	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+}
+
+func (h *handler) SignOut(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	writer := h.responseFactory.NewWriter(rw)
+	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+}
+
+func (h *handler) SignIn(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	writer := h.responseFactory.NewWriter(rw)
+	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+}
+
+func (h *handler) AcrivateOrbisSocius(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	writer := h.responseFactory.NewWriter(rw)
+	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+}
+
+func (h *handler) RequestOrbisSocius(rw http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	writer := h.responseFactory.NewWriter(rw)
+	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+}

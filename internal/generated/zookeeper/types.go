@@ -5,12 +5,24 @@ package zookeeper
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
 	BearerAuthScopes = "bearerAuth.Scopes"
+)
+
+// Defines values for Country.
+const (
+	CountryDeu Country = "deu"
+	CountryFra Country = "fra"
+	CountryGbr Country = "gbr"
+	CountryPol Country = "pol"
+	CountryUkr Country = "ukr"
+	CountryUsa Country = "usa"
 )
 
 // Defines values for ErrorResponseStatus.
@@ -23,10 +35,46 @@ const (
 	Fail FailResponseStatus = "fail"
 )
 
+// Defines values for Language.
+const (
+	LanguageEng Language = "eng"
+	LanguageUkr Language = "ukr"
+)
+
 // Defines values for SuccessResponseStatus.
 const (
 	SuccessResponseStatusSuccess SuccessResponseStatus = "success"
 )
+
+// ActivateOrbisSociusRequest defines model for ActivateOrbisSociusRequest.
+type ActivateOrbisSociusRequest struct {
+	Code      string `json:"code"`
+	RequestId int64  `json:"request_id"`
+}
+
+// ActivateOrbisSociusResponseData defines model for ActivateOrbisSociusResponseData.
+type ActivateOrbisSociusResponseData struct {
+	ApiKey string `json:"api_key"`
+}
+
+// AuthTokenPair defines model for AuthTokenPair.
+type AuthTokenPair struct {
+	RefreshToken string `json:"refresh_token"`
+	Token        string `json:"token"`
+}
+
+// Comptus defines model for Comptus.
+type Comptus struct {
+	// Country Country is ISO 3166-1 alpha-3 country code
+	Country Country             `json:"country"`
+	Email   openapi_types.Email `json:"email"`
+
+	// Language Language is ISO 639-2:1998 alpha-3 language code
+	Language Language `json:"language"`
+}
+
+// Country Country is ISO 3166-1 alpha-3 country code
+type Country string
 
 // ErrorResponseBody defines model for ErrorResponseBody.
 type ErrorResponseBody struct {
@@ -79,13 +127,87 @@ type JSendResponseObject struct {
 	Status SuccessResponseStatus   `json:"status"`
 }
 
+// Language Language is ISO 639-2:1998 alpha-3 language code
+type Language string
+
+// Password defines model for Password.
+type Password = string
+
+// RefreshSessionRequest defines model for RefreshSessionRequest.
+type RefreshSessionRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// RefreshSessionResponseData defines model for RefreshSessionResponseData.
+type RefreshSessionResponseData struct {
+	Self      Comptus       `json:"self"`
+	SessionId int64         `json:"session_id"`
+	Tokens    AuthTokenPair `json:"tokens"`
+}
+
+// RequestDuration defines model for RequestDuration.
+type RequestDuration = int64
+
+// RequestID defines model for RequestID.
+type RequestID = string
+
+// RequestOrbisSociusRequest defines model for RequestOrbisSociusRequest.
+type RequestOrbisSociusRequest struct {
+	Description string `json:"description"`
+	Name        string `json:"name"`
+	Region      string `json:"region"`
+	Url         string `json:"url"`
+}
+
+// RequestOrbisSociusResponseData defines model for RequestOrbisSociusResponseData.
+type RequestOrbisSociusResponseData struct {
+	Ok bool `json:"ok"`
+}
+
 // ResponseStatus defines model for ResponseStatus.
 type ResponseStatus struct {
 	union json.RawMessage
 }
 
+// SemverVersion defines model for SemverVersion.
+type SemverVersion = string
+
+// SignInRequest defines model for SignInRequest.
+type SignInRequest struct {
+	Email    openapi_types.Email `json:"email"`
+	Password Password            `json:"password"`
+}
+
+// SignInResponseData defines model for SignInResponseData.
+type SignInResponseData struct {
+	Self      Comptus       `json:"self"`
+	SessionId int64         `json:"session_id"`
+	Tokens    AuthTokenPair `json:"tokens"`
+}
+
+// SignUpRequest defines model for SignUpRequest.
+type SignUpRequest struct {
+	// Country Country is ISO 3166-1 alpha-3 country code
+	Country Country             `json:"country"`
+	Email   openapi_types.Email `json:"email"`
+
+	// Language Language is ISO 639-2:1998 alpha-3 language code
+	Language Language `json:"language"`
+	Password Password `json:"password"`
+}
+
+// SignUpResponseData defines model for SignUpResponseData.
+type SignUpResponseData struct {
+	Self      Comptus       `json:"self"`
+	SessionId int64         `json:"session_id"`
+	Tokens    AuthTokenPair `json:"tokens"`
+}
+
 // SuccessResponseStatus defines model for SuccessResponseStatus.
 type SuccessResponseStatus string
+
+// Timestamp defines model for Timestamp.
+type Timestamp = time.Time
 
 // BadRequest defines model for BadRequest.
 type BadRequest = FailureResponseBody
@@ -107,6 +229,21 @@ type NotFound = FailureResponseBody
 
 // Success defines model for Success.
 type Success = JSendResponseObject
+
+// RefreshSessionJSONRequestBody defines body for RefreshSession for application/json ContentType.
+type RefreshSessionJSONRequestBody = RefreshSessionRequest
+
+// SignIn1JSONRequestBody defines body for SignIn1 for application/json ContentType.
+type SignIn1JSONRequestBody = SignInRequest
+
+// SignInJSONRequestBody defines body for SignIn for application/json ContentType.
+type SignInJSONRequestBody = SignUpRequest
+
+// AcrivateOrbisSociusJSONRequestBody defines body for AcrivateOrbisSocius for application/json ContentType.
+type AcrivateOrbisSociusJSONRequestBody = ActivateOrbisSociusRequest
+
+// RequestOrbisSociusJSONRequestBody defines body for RequestOrbisSocius for application/json ContentType.
+type RequestOrbisSociusJSONRequestBody = RequestOrbisSociusRequest
 
 // AsSuccessResponseStatus returns the union data inside the ResponseStatus as a SuccessResponseStatus
 func (t ResponseStatus) AsSuccessResponseStatus() (SuccessResponseStatus, error) {

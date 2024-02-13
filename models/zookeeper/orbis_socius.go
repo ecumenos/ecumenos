@@ -51,6 +51,7 @@ type OrbisSociusLaunchRequest struct {
 	Region                 string                         `json:"region"`
 	OrbisSociusName        string                         `json:"orbis_socius_name"`
 	OrbisSociusDescription string                         `json:"orbis_socius_description"`
+	OrbisSociusURL         string                         `json:"orbis_socius_url"`
 	Status                 OrbisSociusLaunchRequestStatus `json:"status"`
 }
 
@@ -68,6 +69,8 @@ type OrbisSociusLaunchInvite struct {
 	CreatedAt                  time.Time `json:"created_at"`
 	Email                      string    `json:"email"`
 	Code                       string    `json:"code"`
+	APIKey                     string    `json:"api_key"`
+	Used                       bool      `json:"used"`
 	OrbisSociusLaunchRequestID int64     `json:"orbis_socius_launch_request_id"`
 	ExpiredAt                  time.Time `json:"expired_at"`
 }

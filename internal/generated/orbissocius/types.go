@@ -5,6 +5,7 @@ package orbissocius
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/oapi-codegen/runtime"
 )
@@ -79,13 +80,25 @@ type JSendResponseObject struct {
 	Status SuccessResponseStatus   `json:"status"`
 }
 
+// RequestDuration defines model for RequestDuration.
+type RequestDuration = int64
+
+// RequestID defines model for RequestID.
+type RequestID = string
+
 // ResponseStatus defines model for ResponseStatus.
 type ResponseStatus struct {
 	union json.RawMessage
 }
 
+// SemverVersion defines model for SemverVersion.
+type SemverVersion = string
+
 // SuccessResponseStatus defines model for SuccessResponseStatus.
 type SuccessResponseStatus string
+
+// Timestamp defines model for Timestamp.
+type Timestamp = time.Time
 
 // BadRequest defines model for BadRequest.
 type BadRequest = FailureResponseBody

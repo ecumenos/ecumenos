@@ -29,6 +29,23 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestID
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestDuration
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/Timestamp
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/SemverVersion
           content:
             application/json:
               schema:
@@ -62,6 +79,23 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestID
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestDuration
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/Timestamp
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/SemverVersion
           content:
             application/json:
               schema:
@@ -90,6 +124,23 @@ paths:
       responses:
         '204':
           description: Session deleted successfully.
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestID
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestDuration
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/Timestamp
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/SemverVersion
       security:
         - bearerAuth: []
       parameters: []
@@ -104,6 +155,23 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: '#/components/schemas/RequestID'
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: '#/components/schemas/RequestDuration'
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: '#/components/schemas/Timestamp'
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: '#/components/schemas/SemverVersion'
           content:
             application/json:
               schema:
@@ -127,6 +195,23 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: '#/components/schemas/RequestID'
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: '#/components/schemas/RequestDuration'
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: '#/components/schemas/Timestamp'
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: '#/components/schemas/SemverVersion'
           content:
             application/json:
               schema:
@@ -348,6 +433,18 @@ components:
         deps:
           type: object
           nullable: true
+    RequestID:
+      type: string
+    RequestDuration:
+      type: integer
+      format: int64
+    Timestamp:
+      type: string
+      format: date-time
+    SemverVersion:
+      type: string
+      pattern: >-
+        ^v([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$
   securitySchemes:
     bearerAuth:
       $ref: ./shared-internal.yaml#/components/securitySchemes/bearerAuth

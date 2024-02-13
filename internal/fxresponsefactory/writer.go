@@ -73,13 +73,12 @@ const (
 )
 
 type SuccessResp[T interface{}] struct {
-	Status   Status    `json:"status"`
-	Data     T         `json:"data"`
-	Metadata *Metadata `json:"metadata"`
+	Status Status `json:"status"`
+	Data   T      `json:"data"`
 }
 
 func (w *writer) WriteSuccess(ctx context.Context, payload interface{}, opts ...ResponseBuildOption) error {
-	metadata, err := w.getMetadata(ctx)
+	headers, err := w.getHeaders(ctx)
 	if err != nil {
 		return err
 	}
@@ -98,23 +97,21 @@ func (w *writer) WriteSuccess(ctx context.Context, payload interface{}, opts ...
 		w.l.Info("responding success response", zap.Any("data", payload), zap.Int("status_code", rb.httpStatusCode))
 	}
 
-	w.writeHeaders(nil, rb.httpStatusCode)
+	w.writeHeaders(headers, rb.httpStatusCode)
 	return w.write(&SuccessResp[interface{}]{
-		Data:     rb.data,
-		Metadata: metadata,
-		Status:   SuccessStatus,
+		Data:   rb.data,
+		Status: SuccessStatus,
 	})
 }
 
 type FailureResp[T interface{}] struct {
-	Status   Status    `json:"status"`
-	Data     T         `json:"data"`
-	Message  string    `json:"message"`
-	Metadata *Metadata `json:"metadata"`
+	Status  Status `json:"status"`
+	Data    T      `json:"data"`
+	Message string `json:"message"`
 }
 
 func (w *writer) WriteFail(ctx context.Context, data interface{}, opts ...ResponseBuildOption) error {
-	metadata, err := w.getMetadata(ctx)
+	headers, err := w.getHeaders(ctx)
 	if err != nil {
 		return err
 	}
@@ -134,23 +131,21 @@ func (w *writer) WriteFail(ctx context.Context, data interface{}, opts ...Respon
 			zap.Int("status_code", rb.httpStatusCode), zap.String("msg", rb.message))
 	}
 
-	w.writeHeaders(nil, http.StatusBadRequest)
+	w.writeHeaders(headers, http.StatusBadRequest)
 	return w.write(&FailureResp[interface{}]{
-		Data:     rb.data,
-		Message:  rb.message,
-		Metadata: metadata,
-		Status:   FailureStatus,
+		Data:    rb.data,
+		Message: rb.message,
+		Status:  FailureStatus,
 	})
 }
 
 type ErrorResp struct {
-	Status   Status    `json:"status"`
-	Message  string    `json:"message"`
-	Metadata *Metadata `json:"metadata"`
+	Status  Status `json:"status"`
+	Message string `json:"message"`
 }
 
 func (w *writer) WriteError(ctx context.Context, msg string, cause error, opts ...ResponseBuildOption) error {
-	metadata, err := w.getMetadata(ctx)
+	headers, err := w.getHeaders(ctx)
 	if err != nil {
 		return err
 	}
@@ -170,11 +165,10 @@ func (w *writer) WriteError(ctx context.Context, msg string, cause error, opts .
 		w.l.Info("responding error response", zap.Error(rb.cause), zap.String("msg", rb.message), zap.Int("status_code", rb.httpStatusCode))
 	}
 
-	w.writeHeaders(nil, rb.httpStatusCode)
+	w.writeHeaders(headers, rb.httpStatusCode)
 	return w.write(&ErrorResp{
-		Message:  rb.message,
-		Metadata: metadata,
-		Status:   ErrorStatus,
+		Message: rb.message,
+		Status:  ErrorStatus,
 	})
 }
 
@@ -218,23 +212,24 @@ func WithLogger(l *zap.Logger) ResponseBuildOption {
 	}
 }
 
-type Metadata struct {
-	RequestID string        `json:"request_id"`
-	Duration  time.Duration `json:"duration"`
-	Timestamp string        `json:"timestamp"`
-	Version   string        `json:"version"`
-}
-
-func (w *writer) getMetadata(ctx context.Context) (*Metadata, error) {
+func (w *writer) getHeaders(ctx context.Context) (map[string]string, error) {
 	duration, err := httputils.GetRequestDuration(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Metadata{
-		RequestID: contextutils.GetRequestID(ctx),
-		Timestamp: timeutils.TimeToString(time.Now()),
-		Duration:  duration,
-		Version:   string(w.appVersion),
+	return map[string]string{
+		"X-Request-Id":              contextutils.GetRequestID(ctx),
+		"X-Timestamp":               timeutils.TimeToString(time.Now()),
+		"X-Request-Duration":        fmt.Sprint(duration.Milliseconds()),
+		"X-App-Version":             string(w.appVersion),
+		"Cache-Control":             "no-cache, no-store, max-age=0, must-revalidate",
+		"Pragma":                    "no-cache",
+		"Expires":                   "0",
+		"X-Content-Type-Options":    "nosniff",
+		"Strict-Transport-Security": "max-age=31536000 ; includeSubDomains",
+		"X-Frame-Options":           "DENY",
+		"X-XSS-Protection":          "0",
+		"Content-Type":              "application/json",
 	}, nil
 }

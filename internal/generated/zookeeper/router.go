@@ -13,6 +13,21 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get Me
+	// (GET /auth/me)
+	GetMe(w http.ResponseWriter, r *http.Request)
+	// Refresh Session
+	// (POST /auth/refresh-session)
+	RefreshSession(w http.ResponseWriter, r *http.Request)
+	// Sign In
+	// (POST /auth/sign-in)
+	SignIn1(w http.ResponseWriter, r *http.Request)
+	// Sign Out
+	// (DELETE /auth/sign-out)
+	SignOut(w http.ResponseWriter, r *http.Request)
+	// Sign In
+	// (POST /auth/sign-up)
+	SignIn(w http.ResponseWriter, r *http.Request)
 	// Returns HTML docs.
 	// (GET /docs)
 	GetDocs(w http.ResponseWriter, r *http.Request)
@@ -22,6 +37,12 @@ type ServerInterface interface {
 	// Service Info
 	// (GET /info)
 	GetInfo(w http.ResponseWriter, r *http.Request)
+	// Activation Orbis Socius
+	// (POST /orbes_socii/activate)
+	AcrivateOrbisSocius(w http.ResponseWriter, r *http.Request)
+	// Request Orbis Socius
+	// (POST /orbes_socii/request)
+	RequestOrbisSocius(w http.ResponseWriter, r *http.Request)
 	// Returns HTML specs.
 	// (GET /spec)
 	GetSpecs(w http.ResponseWriter, r *http.Request)
@@ -35,6 +56,91 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetMe operation middleware
+func (siw *ServerInterfaceWrapper) GetMe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMe(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// RefreshSession operation middleware
+func (siw *ServerInterfaceWrapper) RefreshSession(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RefreshSession(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SignIn1 operation middleware
+func (siw *ServerInterfaceWrapper) SignIn1(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SignIn1(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SignOut operation middleware
+func (siw *ServerInterfaceWrapper) SignOut(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SignOut(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SignIn operation middleware
+func (siw *ServerInterfaceWrapper) SignIn(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SignIn(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
 
 // GetDocs operation middleware
 func (siw *ServerInterfaceWrapper) GetDocs(w http.ResponseWriter, r *http.Request) {
@@ -78,6 +184,40 @@ func (siw *ServerInterfaceWrapper) GetInfo(w http.ResponseWriter, r *http.Reques
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetInfo(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// AcrivateOrbisSocius operation middleware
+func (siw *ServerInterfaceWrapper) AcrivateOrbisSocius(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AcrivateOrbisSocius(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// RequestOrbisSocius operation middleware
+func (siw *ServerInterfaceWrapper) RequestOrbisSocius(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RequestOrbisSocius(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -217,11 +357,25 @@ func HandlerWithOptions(si ServerInterface, options GorillaServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.HandleFunc(options.BaseURL+"/auth/me", wrapper.GetMe).Methods("GET")
+
+	r.HandleFunc(options.BaseURL+"/auth/refresh-session", wrapper.RefreshSession).Methods("POST")
+
+	r.HandleFunc(options.BaseURL+"/auth/sign-in", wrapper.SignIn1).Methods("POST")
+
+	r.HandleFunc(options.BaseURL+"/auth/sign-out", wrapper.SignOut).Methods("DELETE")
+
+	r.HandleFunc(options.BaseURL+"/auth/sign-up", wrapper.SignIn).Methods("POST")
+
 	r.HandleFunc(options.BaseURL+"/docs", wrapper.GetDocs).Methods("GET")
 
 	r.HandleFunc(options.BaseURL+"/health", wrapper.GetHealth).Methods("GET")
 
 	r.HandleFunc(options.BaseURL+"/info", wrapper.GetInfo).Methods("GET")
+
+	r.HandleFunc(options.BaseURL+"/orbes_socii/activate", wrapper.AcrivateOrbisSocius).Methods("POST")
+
+	r.HandleFunc(options.BaseURL+"/orbes_socii/request", wrapper.RequestOrbisSocius).Methods("POST")
 
 	r.HandleFunc(options.BaseURL+"/spec", wrapper.GetSpecs).Methods("GET")
 

@@ -32,6 +32,23 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/RequestID"
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/RequestDuration"
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/Timestamp"
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/SemverVersion"
           content:
             application/json:
               schema:
@@ -64,6 +81,23 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/RequestID"
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/RequestDuration"
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/Timestamp"
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/SemverVersion"
           content:
             application/json:
               schema:
@@ -91,6 +125,23 @@ paths:
       responses:
         '204':
           description: Session deleted successfully.
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/RequestID"
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/RequestDuration"
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/Timestamp"
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: "./shared-internal.yaml#/components/schemas/SemverVersion"
       security:
         - bearerAuth: []  # Security requirement to specify that the endpoint requires authentication
       parameters: []  # No parameters in the path or query
