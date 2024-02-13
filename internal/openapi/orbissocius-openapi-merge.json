@@ -1,0 +1,12 @@
+{
+  "inputs": [
+      { "inputFile": "./orbissocius.yaml" },
+      {
+        "inputFile": "./shared-internal.yaml",
+        "operationSelection": {
+          "excludeTags": ["Internal"]
+        }
+      }
+  ],
+  "output": "./orbissocius-merged.yaml"
+}

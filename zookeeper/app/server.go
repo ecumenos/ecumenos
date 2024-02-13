@@ -5,56 +5,47 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
-	"github.com/ecumenos/ecumenos/internal/fxtypes"
+	f "github.com/ecumenos/ecumenos/internal/fxresponsefactory"
+	gen "github.com/ecumenos/ecumenos/internal/generated/zookeeper"
 	"github.com/ecumenos/ecumenos/internal/httputils"
 	"github.com/ecumenos/ecumenos/zookeeper/config"
-	"github.com/ecumenos/ecumenos/zookeeper/service"
 	"github.com/gorilla/mux"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	service         *service.Service
 	server          *http.Server
 	logger          *zap.Logger
-	responseFactory fxresponsefactory.Factory
-	serviceVersion  fxtypes.Version
-	serviceName     fxtypes.ServiceName
+	responseFactory f.Factory
 }
 
 type serverParams struct {
 	fx.In
-
-	Config         *config.Config
-	Service        *service.Service
-	Logger         *zap.Logger
-	ServiceVersion fxtypes.Version
-	ServiceName    fxtypes.ServiceName
+	Config    *config.Config
+	Logger    *zap.Logger
+	ServerInt gen.ServerInterface
 }
 
-func New(p serverParams) *Server {
-	responseFactory := fxresponsefactory.NewFactory(p.Logger, &fxresponsefactory.Config{WriteLogs: !p.Config.Prod}, p.ServiceVersion)
+func NewServer(params serverParams) *Server {
+	responseFactory := f.NewFactory(params.Logger, &f.Config{WriteLogs: !params.Config.Prod}, config.ServiceVersion)
 	s := &Server{
-		service:         p.Service,
-		logger:          p.Logger,
+		logger:          params.Logger,
 		responseFactory: responseFactory,
-		serviceVersion:  p.ServiceVersion,
-		serviceName:     p.ServiceName,
 	}
 
 	router := mux.NewRouter()
-	enrichContext := httputils.NewEnrichContextMiddleware(p.Logger, responseFactory)
-	recovery := httputils.NewRecoverMiddleware(p.Logger, responseFactory)
+	enrichContext := httputils.NewEnrichContextMiddleware(params.Logger, responseFactory)
+	recovery := httputils.NewRecoverMiddleware(params.Logger, responseFactory)
 	router.Use(mux.MiddlewareFunc(enrichContext))
-	router.HandleFunc("/api/info", s.Info).Methods(http.MethodGet)
-	router.HandleFunc("/api/health", s.Health).Methods(http.MethodGet)
-	router.HandleFunc("/api/requests/orbis-socius-launch", s.RequestOrbisSociusLaunch).Methods(http.MethodPost)
+	router = gen.HandlerWithOptions(params.ServerInt, gen.GorillaServerOptions{
+		BaseRouter:       router,
+		ErrorHandlerFunc: httputils.DefaultErrorHandlerFactory(responseFactory),
+	}).(*mux.Router)
 	router.Use(mux.CORSMethodMiddleware(router))
 	router.Use(mux.MiddlewareFunc(recovery))
 	s.server = &http.Server{
-		Addr:         p.Config.AppAddr,
+		Addr:         params.Config.AppAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  15 * time.Second,

@@ -47,6 +47,10 @@ mock: mock_clean
 mock_clean:
 	find . -name "*.go" -path "**/mocks/*" | while read file; do rm $$file; done;
 
+.PHONY: openapi
+openapi:
+	sh scripts/docs.sh
+
 .env:
 	if [ ! -f ".env" ]; then cp example.dev.env .env; fi
 
@@ -54,6 +58,10 @@ mock_clean:
 .PHONY: run-dev-pds
 run-dev-pds: .env ## Runs pds for local dev
 	export API_LOCAL=true && go run cmd/pds/*.go run-api-server
+
+.PHONY: run-dev-pds-admin
+run-dev-pds-admin: .env ## Runs pds for local admin
+	export API_LOCAL=true && go run cmd/pds/*.go run-admin-server
 
 .PHONY: migrate-up-pds
 migrate-up-pds: .env
@@ -75,6 +83,10 @@ run-pds-image:
 .PHONY: run-dev-orbis-socius
 run-dev-orbis-socius: .env ## Runs orbis socius for local dev
 	export API_LOCAL=true && go run cmd/orbissocius/*.go run-api-server
+
+.PHONY: run-dev-orbis-socius-admin
+run-dev-orbis-socius-admin: .env ## Runs orbis socius for local admin
+	export API_LOCAL=true && go run cmd/orbissocius/*.go run-admin-server
 
 .PHONY: migrate-up-orbis-socius
 migrate-up-orbis-socius: .env

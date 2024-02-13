@@ -64,7 +64,6 @@ func (s *Service) ValidateAdminCredentials(ctx context.Context, email, password 
 	if a == nil {
 		return errors.New("email is invalid")
 	}
-	fmt.Println("admin:", a)
 	if ok := checkPasswordHash(password, a.PasswordHash); !ok {
 		return errors.New("password is invalid")
 	}
@@ -120,12 +119,8 @@ func (s *Service) AuthorizeWithRefreshToken(ctx context.Context, refreshToken st
 	return adminID, session.ID, nil
 }
 
-type PingServicesResult struct {
-	PostgresIsRunning bool
-}
-
-func (s *Service) PingServices(ctx context.Context) *PingServicesResult {
-	return &PingServicesResult{
-		PostgresIsRunning: s.repo.Ping(ctx) == nil,
+func (s *Service) PingServices(ctx context.Context) *map[string]interface{} {
+	return &map[string]interface{}{
+		"postgres": s.repo.Ping(ctx) == nil,
 	}
 }

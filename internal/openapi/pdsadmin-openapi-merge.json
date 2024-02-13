@@ -1,0 +1,12 @@
+{
+  "inputs": [
+      { "inputFile": "./pdsadmin.yaml" },
+      {
+        "inputFile": "./shared-internal.yaml",
+        "operationSelection": {
+          "excludeTags": ["Internal"]
+        }
+      }
+  ],
+  "output": "./pdsadmin-merged.yaml"
+}
