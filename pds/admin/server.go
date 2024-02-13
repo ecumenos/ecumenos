@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
-	gen "github.com/ecumenos/ecumenos/internal/generated/orbissociusadmin"
+	gen "github.com/ecumenos/ecumenos/internal/generated/pdsadmin"
 	"github.com/ecumenos/ecumenos/internal/httputils"
-	"github.com/ecumenos/ecumenos/orbissocius/config"
+	"github.com/ecumenos/ecumenos/pds/config"
 	"github.com/gorilla/mux"
 	"go.uber.org/fx"
 	"go.uber.org/zap"

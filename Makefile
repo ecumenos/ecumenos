@@ -59,6 +59,10 @@ openapi:
 run-dev-pds: .env ## Runs pds for local dev
 	export API_LOCAL=true && go run cmd/pds/*.go run-api-server
 
+.PHONY: run-dev-pds-admin
+run-dev-pds-admin: .env ## Runs pds for local admin
+	export API_LOCAL=true && go run cmd/pds/*.go run-admin-server
+
 .PHONY: migrate-up-pds
 migrate-up-pds: .env
 	export API_LOCAL=true && go run cmd/pds/*.go migrate-up

@@ -1,4 +1,4 @@
-package pds
+package app
 
 import (
 	"context"
@@ -6,35 +6,46 @@ import (
 	"time"
 
 	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
+	gen "github.com/ecumenos/ecumenos/internal/generated/pds"
+	"github.com/ecumenos/ecumenos/internal/httputils"
+	"github.com/ecumenos/ecumenos/pds/config"
 	"github.com/gorilla/mux"
+	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	pds             *PDS
 	server          *http.Server
 	logger          *zap.Logger
 	responseFactory fxresponsefactory.Factory
 }
 
-func NewServer(cfg *Config, pds *PDS, l *zap.Logger) *Server {
-	responseFactory := fxresponsefactory.NewFactory(l, &fxresponsefactory.Config{WriteLogs: !cfg.Prod}, ServiceVersion)
+type serverParams struct {
+	fx.In
+	Config    *config.Config
+	Logger    *zap.Logger
+	ServerInt gen.ServerInterface
+}
+
+func NewServer(params serverParams) *Server {
+	responseFactory := fxresponsefactory.NewFactory(params.Logger, &fxresponsefactory.Config{WriteLogs: !params.Config.Prod}, config.ServiceVersion)
 	s := &Server{
-		pds:             pds,
-		logger:          l,
+		logger:          params.Logger,
 		responseFactory: responseFactory,
 	}
 
 	router := mux.NewRouter()
-	enrichContext := NewEnrichContextMiddleware(l, responseFactory)
-	recovery := NewRecoverMiddleware(l, responseFactory)
+	enrichContext := httputils.NewEnrichContextMiddleware(params.Logger, responseFactory)
+	recovery := httputils.NewRecoverMiddleware(params.Logger, responseFactory)
 	router.Use(mux.MiddlewareFunc(enrichContext))
-	router.HandleFunc("/api/info", s.Info).Methods(http.MethodGet)
-	router.HandleFunc("/api/health", s.Health).Methods(http.MethodGet)
+	router = gen.HandlerWithOptions(params.ServerInt, gen.GorillaServerOptions{
+		BaseRouter:       router,
+		ErrorHandlerFunc: httputils.DefaultErrorHandlerFactory(responseFactory),
+	}).(*mux.Router)
 	router.Use(mux.CORSMethodMiddleware(router))
 	router.Use(mux.MiddlewareFunc(recovery))
 	s.server = &http.Server{
-		Addr:         cfg.Addr,
+		Addr:         params.Config.AppAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  15 * time.Second,
