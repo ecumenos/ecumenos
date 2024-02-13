@@ -16,7 +16,7 @@ import (
 
 type handler struct {
 	responseFactory fxresponsefactory.Factory
-	Service         *service.Service
+	service         *service.Service
 	selfURL         string
 }
 
@@ -32,7 +32,7 @@ func NewHandler(params handlerParams) gen.ServerInterface {
 
 	return &handler{
 		responseFactory: responseFactory,
-		Service:         params.Service,
+		service:         params.Service,
 		selfURL:         params.Config.AppSelfURL,
 	}
 }
@@ -50,12 +50,12 @@ func (h *handler) GetHealth(rw http.ResponseWriter, r *http.Request) {
 
 func (h *handler) GetInfo(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	result := h.Service.PingServices(ctx)
+	deps := h.service.PingServices(ctx)
 	writer := h.responseFactory.NewWriter(rw)
 	_ = writer.WriteSuccess(ctx, gen.GetInfoData{ //nolint:errcheck
 		Name:    string(config.ServiceName),
 		Version: string(config.ServiceVersion),
-		Deps:    &map[string]interface{}{"postgres": result.PostgresIsRunning},
+		Deps:    deps,
 	})
 }
 

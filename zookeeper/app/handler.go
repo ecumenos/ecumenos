@@ -1,21 +1,21 @@
-package admin
+package app
 
 import (
 	"fmt"
 	"net/http"
 
 	"github.com/ecumenos/ecumenos/internal/docs"
-	"github.com/ecumenos/ecumenos/internal/fxresponsefactory"
-	gen "github.com/ecumenos/ecumenos/internal/generated/orbissociusadmin"
+	f "github.com/ecumenos/ecumenos/internal/fxresponsefactory"
+	gen "github.com/ecumenos/ecumenos/internal/generated/zookeeper"
 	"github.com/ecumenos/ecumenos/internal/openapi"
-	"github.com/ecumenos/ecumenos/orbissocius/config"
-	"github.com/ecumenos/ecumenos/orbissocius/service"
+	"github.com/ecumenos/ecumenos/zookeeper/config"
+	"github.com/ecumenos/ecumenos/zookeeper/service"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 type handler struct {
-	responseFactory fxresponsefactory.Factory
+	responseFactory f.Factory
 	service         *service.Service
 	selfURL         string
 }
@@ -28,18 +28,18 @@ type handlerParams struct {
 }
 
 func NewHandler(params handlerParams) gen.ServerInterface {
-	responseFactory := fxresponsefactory.NewFactory(params.Logger, &fxresponsefactory.Config{WriteLogs: !params.Config.Prod}, config.ServiceVersion)
+	responseFactory := f.NewFactory(params.Logger, &f.Config{WriteLogs: !params.Config.Prod}, config.ServiceVersion)
 
 	return &handler{
 		responseFactory: responseFactory,
 		service:         params.Service,
-		selfURL:         params.Config.AdminSelfURL,
+		selfURL:         params.Config.AppSelfURL,
 	}
 }
 
 func (h *handler) GetDocs(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "text/html; charset=UTF-8")
-	_, _ = rw.Write(docs.OrbisSociusAdminDocs(h.selfURL))
+	_, _ = rw.Write(docs.ZookeeperDocs(h.selfURL))
 }
 
 func (h *handler) GetHealth(rw http.ResponseWriter, r *http.Request) {
@@ -60,8 +60,8 @@ func (h *handler) GetInfo(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) GetSpecs(rw http.ResponseWriter, r *http.Request) {
-	filename := "orbis_socius_admin_specs.yaml"
+	filename := "zookeeper_specs.yaml"
 	rw.Header().Add("Content-Type", "application/openapi+yaml")
 	rw.Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%v"`, filename))
-	_, _ = rw.Write(openapi.OrbisSociusAdminSpec(h.selfURL))
+	_, _ = rw.Write(openapi.ZookeeperSpec(h.selfURL))
 }

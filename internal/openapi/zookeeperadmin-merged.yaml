@@ -225,7 +225,8 @@ components:
         refresh_token:
           type: string
         session_id:
-          type: number
+          type: integer
+          format: int64
     RefreshSessionRequest:
       type: object
       required:
@@ -247,7 +248,8 @@ components:
         refresh_token:
           type: string
         session_id:
-          type: number
+          type: integer
+          format: int64
     ErrorResponseBody:
       type: object
       required:

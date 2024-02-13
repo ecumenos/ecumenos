@@ -90,9 +90,9 @@ type RefreshSessionRequest struct {
 
 // RefreshSessionResponseData defines model for RefreshSessionResponseData.
 type RefreshSessionResponseData struct {
-	RefreshToken string  `json:"refresh_token"`
-	SessionId    float32 `json:"session_id"`
-	Token        string  `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+	SessionId    int64  `json:"session_id"`
+	Token        string `json:"token"`
 }
 
 // ResponseStatus defines model for ResponseStatus.
@@ -108,9 +108,9 @@ type SignInRequest struct {
 
 // SignInResponseData defines model for SignInResponseData.
 type SignInResponseData struct {
-	RefreshToken string  `json:"refresh_token"`
-	SessionId    float32 `json:"session_id"`
-	Token        string  `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+	SessionId    int64  `json:"session_id"`
+	Token        string `json:"token"`
 }
 
 // SuccessResponseStatus defines model for SuccessResponseStatus.

@@ -17,12 +17,8 @@ func New(repo *repository.Repository, cfg *config.Config) *Service {
 	}
 }
 
-type PingServicesResult struct {
-	PostgresIsRunning bool
-}
-
-func (s *Service) PingServices(ctx context.Context) *PingServicesResult {
-	return &PingServicesResult{
-		PostgresIsRunning: s.repo.Ping(ctx) == nil,
+func (s *Service) PingServices(ctx context.Context) *map[string]interface{} {
+	return &map[string]interface{}{
+		"postgres": s.repo.Ping(ctx) == nil,
 	}
 }
