@@ -46,6 +46,31 @@ create table public.admin_sessions
   refresh_token    text not null
 );
 
+create table public.compti
+(
+  id               bigint primary key,
+  created_at       timestamp(0) with time zone default current_timestamp not null,
+  updated_at       timestamp(0) with time zone default current_timestamp not null,
+  deleted_at       timestamp(0) with time zone,
+  tombstoned       boolean not null default false,
+  email            text not null,
+  password_hash    text not null
+);
+create unique index compti_email_uindex on compti (email);
+
+create table public.comptus_sessions
+(
+  id               bigint primary key,
+  created_at       timestamp(0) with time zone default current_timestamp not null,
+  updated_at       timestamp(0) with time zone default current_timestamp not null,
+  expired_at       timestamp(0) with time zone not null,
+  deleted_at       timestamp(0) with time zone,
+  tombstoned       boolean not null default false,
+  comptus_id       bigint references compti (id) not null,
+  token            text not null,
+  refresh_token    text not null
+);
+
 create table public.orbes_socii
 (
   id                bigint primary key,
@@ -53,7 +78,8 @@ create table public.orbes_socii
   updated_at        timestamp(0) with time zone default current_timestamp not null,
   deleted_at        timestamp(0) with time zone,
   tombstoned        boolean not null default false,
-  owner_email       text not null,
+  owner_comptus_id  bigint references compti (id) not null,
+  approver_admin_id bigint references admins (id),
   alive             boolean not null default false,
   robustness_status integer check (robustness_status >= 0) not null,
   last_pinged_at    timestamp(0) with time zone,
@@ -76,7 +102,7 @@ create table public.orbes_socii_launch_requests
 (
   id                       bigint primary key,
   created_at               timestamp(0) with time zone default current_timestamp not null,
-  email                    text not null,
+  comptus_id               bigint references compti (id) not null,
   region                   text not null,
   orbis_socius_name        text not null,
   orbis_socius_description text not null,
@@ -88,11 +114,13 @@ create table public.orbes_socii_launch_invites
 (
   id                              bigint primary key,
   created_at                      timestamp(0) with time zone default current_timestamp not null,
-  email                           text not null,
+  comptus_id                      bigint references compti (id) not null,
+  admin_id                        bigint references admins (id) not null,
+  orbis_socius_id                 bigint references orbes_socii (id),
   code                            text not null,
   api_key                         text not null,
   used                            boolean not null default false,
-  orbis_socius_launch_requests_id bigint references orbes_socii_launch_requests(id),
+  orbis_socius_launch_request_id bigint references orbes_socii_launch_requests(id),
   expired_at                      timestamp(0) with time zone not null
 );
 
