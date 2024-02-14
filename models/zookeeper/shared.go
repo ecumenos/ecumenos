@@ -3,12 +3,9 @@ package zookeeper
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"unicode"
 )
-
-var AdminRoleNameRegex = regexp.MustCompile("[a-z0-9_]+([a-z0-9_.-]+[a-z0-9_]+)?")
 
 func VerifyPassword(password string) error {
 	var uppercasePresent bool
