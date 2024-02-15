@@ -25,7 +25,7 @@ func makeToken(subject string, scope string, exp time.Time) jwt.Token {
 	return tok
 }
 
-func (a *Authorization) CreateAdminTokens(ctx context.Context, adminID int64, tokExp, refTokExp time.Time) (string, string, error) {
+func (a *Authorization) CreateTokens(ctx context.Context, adminID int64, tokExp, refTokExp time.Time) (string, string, error) {
 	accessTok := makeToken(fmt.Sprint(adminID), "access", tokExp)
 	refreshTok := makeToken(fmt.Sprint(adminID), "refresh", refTokExp)
 

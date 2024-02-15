@@ -17,7 +17,7 @@ func (s *Service) CreateAdminSession(ctx context.Context, adminID int64) (*model
 	}
 
 	tokExp, refTokExp := s.auth.GetExpiredAt()
-	token, refreshToken, err := s.auth.CreateAdminTokens(ctx, adminID, tokExp, refTokExp)
+	token, refreshToken, err := s.auth.CreateTokens(ctx, adminID, tokExp, refTokExp)
 	if err != nil {
 		return nil, err
 	}
@@ -30,13 +30,13 @@ func (s *Service) DeleteAdminSession(ctx context.Context, id int64) error {
 }
 
 func (s *Service) RefreshAdminSession(ctx context.Context, refreshToken string) (*models.AdminSession, error) {
-	adminID, sessionID, err := s.AuthorizeWithRefreshToken(ctx, refreshToken)
+	adminID, sessionID, err := s.AuthorizeAdminWithRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return nil, err
 	}
 
 	tokExp, refTokExp := s.auth.GetExpiredAt()
-	token, refreshToken, err := s.auth.CreateAdminTokens(ctx, adminID, tokExp, refTokExp)
+	token, refreshToken, err := s.auth.CreateTokens(ctx, adminID, tokExp, refTokExp)
 	if err != nil {
 		return nil, err
 	}

@@ -20,8 +20,8 @@ paths:
       tags:
         - Authorization
       description: Register new zookeeper account.
-      summary: Sign In
-      operationId: signIn
+      summary: Sign Up
+      operationId: signUp
       requestBody:
         content:
           application/json:

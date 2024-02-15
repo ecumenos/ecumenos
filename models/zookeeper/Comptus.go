@@ -13,4 +13,6 @@ type Comptus struct {
 	Tombstoned   bool         `json:"tombstoned"`
 	Email        string       `json:"email"`
 	PasswordHash string       `json:"password_hash"`
+	Patria       string       `json:"patria"`
+	Lingua       string       `json:"lingua"`
 }

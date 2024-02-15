@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -8,8 +10,12 @@ import (
 	f "github.com/ecumenos/ecumenos/internal/fxresponsefactory"
 	gen "github.com/ecumenos/ecumenos/internal/generated/zookeeper"
 	"github.com/ecumenos/ecumenos/internal/openapi"
+	"github.com/ecumenos/ecumenos/internal/toolkit/contextutils"
+	"github.com/ecumenos/ecumenos/internal/toolkit/httputils"
+	models "github.com/ecumenos/ecumenos/models/zookeeper"
 	"github.com/ecumenos/ecumenos/zookeeper/config"
 	"github.com/ecumenos/ecumenos/zookeeper/service"
+	"github.com/oapi-codegen/runtime/types"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
@@ -18,6 +24,7 @@ type handler struct {
 	responseFactory f.Factory
 	service         *service.Service
 	selfURL         string
+	logger          *zap.Logger
 }
 
 type handlerParams struct {
@@ -34,7 +41,32 @@ func NewHandler(params handlerParams) gen.ServerInterface {
 		responseFactory: responseFactory,
 		service:         params.Service,
 		selfURL:         params.Config.AppSelfURL,
+		logger:          params.Logger,
 	}
+}
+
+func (h *handler) auth(rw http.ResponseWriter, r *http.Request) context.Context {
+	ctx := r.Context()
+	writer := h.responseFactory.NewWriter(rw)
+	token, err := httputils.ExtractJWTBearerToken(r)
+	if err != nil {
+		_ = writer.WriteFail(ctx, nil, f.WithHTTPStatusCode(http.StatusUnauthorized), //nolint:errcheck
+			f.WithCause(err), f.WithMessage("failed to get token"))
+		h.logger.Error("can not extract JWT token from request", zap.Error(err))
+		return nil
+	}
+
+	comptusID, sessionID, err := h.service.AuthorizeComptus(ctx, token)
+	if err != nil {
+		_ = writer.WriteFail(ctx, nil, f.WithHTTPStatusCode(http.StatusUnauthorized), //nolint:errcheck
+			f.WithCause(err), f.WithMessage("failed to authorize"))
+		h.logger.Error("can not authorize", zap.Error(err))
+		return nil
+	}
+	ctx = contextutils.SetComptusID(ctx, comptusID)
+	ctx = contextutils.SetComptusSessionID(ctx, sessionID)
+
+	return ctx
 }
 
 func (h *handler) GetDocs(rw http.ResponseWriter, r *http.Request) {
@@ -66,44 +98,171 @@ func (h *handler) GetSpecs(rw http.ResponseWriter, r *http.Request) {
 	_, _ = rw.Write(openapi.ZookeeperSpec(h.selfURL))
 }
 
+func mapModelComptusToGenComptus(v *models.Comptus) gen.Comptus {
+	return gen.Comptus{
+		Country:  gen.Country(v.Patria),
+		Email:    types.Email(v.Email),
+		Language: gen.Language(v.Lingua),
+	}
+}
+
 func (h *handler) GetMe(rw http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx := h.auth(rw, r)
+	if ctx == nil {
+		return
+	}
+
 	writer := h.responseFactory.NewWriter(rw)
-	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+	comptusID, ok := contextutils.GetComptusID(ctx)
+	if !ok {
+		_ = writer.WriteError(ctx, "something went wrong", errors.New("can not get comptus id from context")) //nolint:errcheck
+		return
+	}
+	c, err := h.service.GetComptusByID(ctx, comptusID)
+	if err != nil {
+		_ = writer.WriteError(ctx, "failed get comptus", err) //nolint:errcheck
+		return
+	}
+
+	_ = writer.WriteSuccess(ctx, mapModelComptusToGenComptus(c)) //nolint:errcheck
 }
 
 func (h *handler) RefreshSession(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	writer := h.responseFactory.NewWriter(rw)
-	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+
+	request, err := httputils.DecodeBody[gen.RefreshSessionRequest](h.logger, r)
+	if err != nil {
+		_ = writer.WriteFail(ctx, "invalid body", f.WithCause(err)) //nolint:errcheck
+		return
+	}
+	session, err := h.service.RefreshComptusSession(ctx, request.RefreshToken)
+	if err != nil {
+		_ = writer.WriteError(ctx, "failed refresh comptus session", err) //nolint:errcheck
+		return
+	}
+
+	c, err := h.service.GetComptusByID(ctx, session.ComptusID)
+	if err != nil {
+		_ = writer.WriteError(ctx, "failed refresh comptus session", err) //nolint:errcheck
+		return
+	}
+
+	_ = writer.WriteSuccess(ctx, gen.RefreshSessionResponseData{ //nolint:errcheck
+		Self: mapModelComptusToGenComptus(c),
+		Tokens: gen.AuthTokenPair{
+			RefreshToken: session.RefreshToken,
+			Token:        session.Token,
+		},
+		SessionId: session.ID,
+	})
 }
 
-func (h *handler) SignIn1(rw http.ResponseWriter, r *http.Request) {
+func (h *handler) SignUp(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	writer := h.responseFactory.NewWriter(rw)
-	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+
+	request, err := httputils.DecodeBody[gen.SignUpRequest](h.logger, r)
+	if err != nil {
+		_ = writer.WriteFail(ctx, "invalid body", f.WithCause(err)) //nolint:errcheck
+		return
+	}
+
+	c, err := h.service.CreateComptus(ctx, string(request.Email), request.Password, string(request.Country), string(request.Language))
+	if err != nil {
+		_ = writer.WriteError(ctx, "can not create comptus", err) //nolint:errcheck
+		return
+	}
+	session, err := h.service.CreateComptusSession(ctx, c.ID)
+	if err != nil {
+		_ = writer.WriteError(ctx, "can not create comptus session", err) //nolint:errcheck
+		return
+	}
+
+	_ = writer.WriteSuccess(ctx, gen.SignUpResponseData{ //nolint:errcheck
+		Self: mapModelComptusToGenComptus(c),
+		Tokens: gen.AuthTokenPair{
+			RefreshToken: session.RefreshToken,
+			Token:        session.Token,
+		},
+		SessionId: session.ID,
+	})
 }
 
 func (h *handler) SignOut(rw http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx := h.auth(rw, r)
+	if ctx == nil {
+		return
+	}
+
 	writer := h.responseFactory.NewWriter(rw)
-	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+	sessionID, ok := contextutils.GetComptusSessionID(ctx)
+	if !ok {
+		_ = writer.WriteError(ctx, "something went wrong", errors.New("can not get session id from context")) //nolint:errcheck
+		return
+	}
+	if err := h.service.DeleteComptusSession(ctx, sessionID); err != nil {
+		_ = writer.WriteError(ctx, "failed detele comptus session", err) //nolint:errcheck
+		return
+	}
+	_ = writer.WriteSuccess(ctx, nil, f.WithHTTPStatusCode(http.StatusNoContent))
 }
 
 func (h *handler) SignIn(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	writer := h.responseFactory.NewWriter(rw)
-	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+
+	request, err := httputils.DecodeBody[gen.SignInRequest](h.logger, r)
+	if err != nil {
+		_ = writer.WriteFail(ctx, "invalid body", f.WithCause(err)) //nolint:errcheck
+		return
+	}
+	if err := h.service.ValidateComptusCredentials(ctx, string(request.Email), request.Password); err != nil {
+		_ = writer.WriteFail(ctx, "invalid email or password", f.WithCause(err), f.WithHTTPStatusCode(http.StatusUnauthorized)) //nolint:errcheck
+		return
+	}
+
+	c, err := h.service.GetComptusByEmail(ctx, string(request.Email))
+	if err != nil {
+		_ = writer.WriteError(ctx, "can not get comptus by email", err) //nolint:errcheck
+		return
+	}
+	if c == nil {
+		_ = writer.WriteFail(ctx, "invalid email", f.WithHTTPStatusCode(http.StatusNotFound)) //nolint:errcheck
+		return
+	}
+	session, err := h.service.CreateComptusSession(ctx, c.ID)
+	if err != nil {
+		_ = writer.WriteError(ctx, "can not create comptus session", err) //nolint:errcheck
+		return
+	}
+
+	_ = writer.WriteSuccess(ctx, gen.SignInResponseData{ //nolint:errcheck
+		Self: mapModelComptusToGenComptus(c),
+		Tokens: gen.AuthTokenPair{
+			RefreshToken: session.RefreshToken,
+			Token:        session.Token,
+		},
+		SessionId: session.ID,
+	})
 }
 
 func (h *handler) AcrivateOrbisSocius(rw http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx := h.auth(rw, r)
+	if ctx == nil {
+		return
+	}
+
 	writer := h.responseFactory.NewWriter(rw)
 	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
 }
 
 func (h *handler) RequestOrbisSocius(rw http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx := h.auth(rw, r)
+	if ctx == nil {
+		return
+	}
+
 	writer := h.responseFactory.NewWriter(rw)
 	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
 }

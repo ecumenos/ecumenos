@@ -54,7 +54,9 @@ create table public.compti
   deleted_at       timestamp(0) with time zone,
   tombstoned       boolean not null default false,
   email            text not null,
-  password_hash    text not null
+  password_hash    text not null,
+  patria           text not null,
+  lingua           text not null
 );
 create unique index compti_email_uindex on compti (email);
 

@@ -14,9 +14,9 @@ const (
 	startRequestTimestampKey ctxKey = "k_start_request_timestamp"
 	ipAddressKey             ctxKey = "k_ip_address"
 	adminIDKey               ctxKey = "k_admin_id"
-	accountIDKey             ctxKey = "k_account_id"
+	comptusIDKey             ctxKey = "k_account_id"
 	adminSessionIDKey        ctxKey = "k_admin_session_id"
-	sessionIDKey             ctxKey = "k_session_id"
+	comptusSessionIDKey      ctxKey = "k_session_id"
 )
 
 func getValueFromContext(ctx context.Context, key ctxKey) string {
@@ -81,12 +81,12 @@ func GetAdminID(ctx context.Context) (int64, bool) {
 	return i, true
 }
 
-func SetAccountID(ctx context.Context, v int64) context.Context {
-	return setValue(ctx, accountIDKey, fmt.Sprint(v))
+func SetComptusID(ctx context.Context, v int64) context.Context {
+	return setValue(ctx, comptusIDKey, fmt.Sprint(v))
 }
 
-func GetAccountID(ctx context.Context) (int64, bool) {
-	v := getValueFromContext(ctx, accountIDKey)
+func GetComptusID(ctx context.Context) (int64, bool) {
+	v := getValueFromContext(ctx, comptusIDKey)
 	i, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
 		return 0, false
@@ -109,12 +109,12 @@ func GetAdminSessionID(ctx context.Context) (int64, bool) {
 	return i, true
 }
 
-func SetSessionID(ctx context.Context, v int64) context.Context {
-	return setValue(ctx, sessionIDKey, fmt.Sprint(v))
+func SetComptusSessionID(ctx context.Context, v int64) context.Context {
+	return setValue(ctx, comptusSessionIDKey, fmt.Sprint(v))
 }
 
-func GetSessionID(ctx context.Context) (int64, bool) {
-	v := getValueFromContext(ctx, sessionIDKey)
+func GetComptusSessionID(ctx context.Context) (int64, bool) {
+	v := getValueFromContext(ctx, comptusSessionIDKey)
 	i, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
 		return 0, false
