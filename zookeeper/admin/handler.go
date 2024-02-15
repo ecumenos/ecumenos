@@ -54,7 +54,7 @@ func (h *handler) auth(rw http.ResponseWriter, r *http.Request) context.Context 
 		return nil
 	}
 
-	adminID, sessionID, err := h.service.Authorize(ctx, token)
+	adminID, sessionID, err := h.service.AuthorizeAdmin(ctx, token)
 	if err != nil {
 		_ = writer.WriteFail(ctx, nil, f.WithHTTPStatusCode(http.StatusUnauthorized), //nolint:errcheck
 			f.WithCause(err), f.WithMessage("failed to authorize"))

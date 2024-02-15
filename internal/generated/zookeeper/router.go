@@ -21,13 +21,13 @@ type ServerInterface interface {
 	RefreshSession(w http.ResponseWriter, r *http.Request)
 	// Sign In
 	// (POST /auth/sign-in)
-	SignIn1(w http.ResponseWriter, r *http.Request)
+	SignIn(w http.ResponseWriter, r *http.Request)
 	// Sign Out
 	// (DELETE /auth/sign-out)
 	SignOut(w http.ResponseWriter, r *http.Request)
-	// Sign In
+	// Sign Up
 	// (POST /auth/sign-up)
-	SignIn(w http.ResponseWriter, r *http.Request)
+	SignUp(w http.ResponseWriter, r *http.Request)
 	// Returns HTML docs.
 	// (GET /docs)
 	GetDocs(w http.ResponseWriter, r *http.Request)
@@ -91,14 +91,14 @@ func (siw *ServerInterfaceWrapper) RefreshSession(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// SignIn1 operation middleware
-func (siw *ServerInterfaceWrapper) SignIn1(w http.ResponseWriter, r *http.Request) {
+// SignIn operation middleware
+func (siw *ServerInterfaceWrapper) SignIn(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.SignIn1(w, r)
+		siw.Handler.SignIn(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -125,14 +125,14 @@ func (siw *ServerInterfaceWrapper) SignOut(w http.ResponseWriter, r *http.Reques
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// SignIn operation middleware
-func (siw *ServerInterfaceWrapper) SignIn(w http.ResponseWriter, r *http.Request) {
+// SignUp operation middleware
+func (siw *ServerInterfaceWrapper) SignUp(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.SignIn(w, r)
+		siw.Handler.SignUp(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -361,11 +361,11 @@ func HandlerWithOptions(si ServerInterface, options GorillaServerOptions) http.H
 
 	r.HandleFunc(options.BaseURL+"/auth/refresh-session", wrapper.RefreshSession).Methods("POST")
 
-	r.HandleFunc(options.BaseURL+"/auth/sign-in", wrapper.SignIn1).Methods("POST")
+	r.HandleFunc(options.BaseURL+"/auth/sign-in", wrapper.SignIn).Methods("POST")
 
 	r.HandleFunc(options.BaseURL+"/auth/sign-out", wrapper.SignOut).Methods("DELETE")
 
-	r.HandleFunc(options.BaseURL+"/auth/sign-up", wrapper.SignIn).Methods("POST")
+	r.HandleFunc(options.BaseURL+"/auth/sign-up", wrapper.SignUp).Methods("POST")
 
 	r.HandleFunc(options.BaseURL+"/docs", wrapper.GetDocs).Methods("GET")
 

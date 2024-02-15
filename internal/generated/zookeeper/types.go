@@ -233,11 +233,11 @@ type Success = JSendResponseObject
 // RefreshSessionJSONRequestBody defines body for RefreshSession for application/json ContentType.
 type RefreshSessionJSONRequestBody = RefreshSessionRequest
 
-// SignIn1JSONRequestBody defines body for SignIn1 for application/json ContentType.
-type SignIn1JSONRequestBody = SignInRequest
-
 // SignInJSONRequestBody defines body for SignIn for application/json ContentType.
-type SignInJSONRequestBody = SignUpRequest
+type SignInJSONRequestBody = SignInRequest
+
+// SignUpJSONRequestBody defines body for SignUp for application/json ContentType.
+type SignUpJSONRequestBody = SignUpRequest
 
 // AcrivateOrbisSociusJSONRequestBody defines body for AcrivateOrbisSocius for application/json ContentType.
 type AcrivateOrbisSociusJSONRequestBody = ActivateOrbisSociusRequest

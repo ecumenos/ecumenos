@@ -15,7 +15,7 @@ func TestAuthorization(t *testing.T) {
 	ctx := context.Background()
 	adminID := int64(1234567890)
 	expTok, expRefTok := a.GetExpiredAt()
-	tok, refTok, err := a.CreateAdminTokens(ctx, adminID, expTok, expRefTok)
+	tok, refTok, err := a.CreateTokens(ctx, adminID, expTok, expRefTok)
 	require.NoError(t, err)
 
 	jwtTok, err := a.DecodeToken(tok)
