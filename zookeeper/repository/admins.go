@@ -8,7 +8,7 @@ import (
 
 	"github.com/ecumenos/ecumenos/internal/toolkit/errorsutils"
 	"github.com/ecumenos/ecumenos/internal/toolkit/random"
-	commonModels "github.com/ecumenos/ecumenos/models"
+	"github.com/ecumenos/ecumenos/models/common"
 	models "github.com/ecumenos/ecumenos/models/zookeeper"
 	"github.com/jackc/pgx/v4"
 )
@@ -18,7 +18,7 @@ func (r *Repository) InsertAdmin(ctx context.Context, email, passwordHash string
 	if err != nil {
 		return nil, err
 	}
-	if !commonModels.EmailRegex.MatchString(email) {
+	if !common.EmailRegex.MatchString(email) {
 		return nil, fmt.Errorf("invalid email. it doesn't fulfill validation (email = %v)", email)
 	}
 	a, err := r.GetAdminByEmail(ctx, email)
@@ -32,9 +32,9 @@ func (r *Repository) InsertAdmin(ctx context.Context, email, passwordHash string
 	updatedAt := time.Now()
 	tombstoned := false
 
-	query := fmt.Sprintf(`insert into public.admins
+	query := `insert into public.admins
   (id, created_at, updated_at, tombstoned, email, password_hash)
-  values ($1, $2, $3, $4, $5, $6);`)
+  values ($1, $2, $3, $4, $5, $6);`
 	params := []interface{}{id, createdAt, updatedAt, tombstoned, email, passwordHash}
 	if _, err := r.driver.QueryRow(ctx, query, params...); err != nil {
 		return nil, err
@@ -51,12 +51,11 @@ func (r *Repository) InsertAdmin(ctx context.Context, email, passwordHash string
 }
 
 func (r *Repository) GetAdminByID(ctx context.Context, id int64) (*models.Admin, error) {
-	q := fmt.Sprintf(`
-		select
-      id, created_at, updated_at, deleted_at, tombstoned, email, password_hash
-    from public.admins
-		where id=$1 and tombstoned=false;
-	`)
+	q := `
+  select
+    id, created_at, updated_at, deleted_at, tombstoned, email, password_hash
+  from public.admins
+  where id=$1 and tombstoned=false;`
 	row, err := r.driver.QueryRow(ctx, q, id)
 	if err != nil {
 		return nil, err
@@ -84,12 +83,11 @@ func (r *Repository) GetAdminByID(ctx context.Context, id int64) (*models.Admin,
 }
 
 func (r *Repository) GetAdminByEmail(ctx context.Context, email string) (*models.Admin, error) {
-	q := fmt.Sprintf(`
-		select
-      id, created_at, updated_at, deleted_at, tombstoned, email, password_hash
-    from public.admins
-		where email=$1 and tombstoned=false;
-	`)
+	q := `
+  select
+    id, created_at, updated_at, deleted_at, tombstoned, email, password_hash
+  from public.admins
+  where email=$1 and tombstoned=false;`
 	row, err := r.driver.QueryRow(ctx, q, email)
 	if err != nil {
 		return nil, err
@@ -124,9 +122,9 @@ func (r *Repository) AssignRoleForAdmin(ctx context.Context, receiverAdminID, ad
 	}
 	grantedAt := time.Now()
 
-	query := fmt.Sprintf(`insert into public.admins_admin_roles_relations
+	query := `insert into public.admins_admin_roles_relations
   (receiver_admin_id, granter_admin_id, role_id, granted_at)
-  values ($1, $2, $3, $4);`)
+  values ($1, $2, $3, $4);`
 	params := []interface{}{receiverAdminID, granterAdminID, adminRoleID, grantedAt}
 	if _, err := r.driver.QueryRow(ctx, query, params...); err != nil {
 		return nil, err

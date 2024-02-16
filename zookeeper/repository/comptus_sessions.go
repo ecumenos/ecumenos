@@ -24,9 +24,9 @@ func (r *Repository) InsertComptusSession(ctx context.Context, comptusID int64, 
 		return nil, fmt.Errorf("expired at can not be before created at (expired at = %v, created at = %v)", timeutils.TimeToString(expiredAt), timeutils.TimeToString(createdAt))
 	}
 
-	query := fmt.Sprintf(`insert into public.comptus_sessions
+	query := `insert into public.comptus_sessions
   (id, created_at, updated_at, expired_at, tombstoned, comptus_id, token, refresh_token)
-  values ($1, $2, $3, $4, $5, $6, $7, $8);`)
+  values ($1, $2, $3, $4, $5, $6, $7, $8);`
 	params := []interface{}{id, createdAt, updatedAt, expiredAt, tombstoned, comptusID, t, rt}
 	if _, err := r.driver.QueryRow(ctx, query, params...); err != nil {
 		return nil, err
@@ -69,12 +69,11 @@ func scanRowComptusSession(row pgx.Row) (*models.ComptusSession, error) {
 }
 
 func (r *Repository) GetComptusSessionByID(ctx context.Context, id int64) (*models.ComptusSession, error) {
-	q := fmt.Sprintf(`
-		select
-      id, created_at, updated_at, expired_at, deleted_at, tombstoned, comptus_id, token, refresh_token
-    from public.comptus_sessions
-		where id=$1 and tombstoned=false;
-	`)
+	q := `
+  select
+    id, created_at, updated_at, expired_at, deleted_at, tombstoned, comptus_id, token, refresh_token
+  from public.comptus_sessions
+  where id=$1 and tombstoned=false;`
 	row, err := r.driver.QueryRow(ctx, q, id)
 	if err != nil {
 		return nil, err
@@ -84,12 +83,11 @@ func (r *Repository) GetComptusSessionByID(ctx context.Context, id int64) (*mode
 }
 
 func (r *Repository) GetComptusSessionByComptusIDAndToken(ctx context.Context, comptusID int64, token string) (*models.ComptusSession, error) {
-	q := fmt.Sprintf(`
-		select
-      id, created_at, updated_at, expired_at, deleted_at, tombstoned, comptus_id, token, refresh_token
-    from public.comptus_sessions
-		where comptus_id=$1 and token=$2 and tombstoned=false;
-	`)
+	q := `
+  select
+    id, created_at, updated_at, expired_at, deleted_at, tombstoned, comptus_id, token, refresh_token
+  from public.comptus_sessions
+  where comptus_id=$1 and token=$2 and tombstoned=false;`
 	row, err := r.driver.QueryRow(ctx, q, comptusID, token)
 	if err != nil {
 		return nil, err
@@ -99,12 +97,11 @@ func (r *Repository) GetComptusSessionByComptusIDAndToken(ctx context.Context, c
 }
 
 func (r *Repository) GetComptusSessionByComptusIDAndRefreshToken(ctx context.Context, comptusID int64, refreshToken string) (*models.ComptusSession, error) {
-	q := fmt.Sprintf(`
-		select
-      id, created_at, updated_at, expired_at, deleted_at, tombstoned, comptus_id, token, refresh_token
-    from public.comptus_sessions
-		where comptus_id=$1 and refresh_token=$2 and tombstoned=false;
-	`)
+	q := `
+  select
+    id, created_at, updated_at, expired_at, deleted_at, tombstoned, comptus_id, token, refresh_token
+  from public.comptus_sessions
+  where comptus_id=$1 and refresh_token=$2 and tombstoned=false;`
 	row, err := r.driver.QueryRow(ctx, q, comptusID, refreshToken)
 	if err != nil {
 		return nil, err

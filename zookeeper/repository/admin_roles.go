@@ -30,9 +30,9 @@ func (r *Repository) InsertAdminRole(ctx context.Context, name string, permissio
 	updatedAt := time.Now()
 	tombstoned := false
 
-	query := fmt.Sprintf(`insert into public.admin_roles
+	query := `insert into public.admin_roles
   (id, created_at, updated_at, tombstoned, name, permissions, creator_admin_id)
-  values ($1, $2, $3, $4, $5, $6, $7);`)
+  values ($1, $2, $3, $4, $5, $6, $7);`
 	params := []interface{}{id, createdAt, updatedAt, tombstoned, name, permissions, creatorID}
 	if _, err := r.driver.QueryRow(ctx, query, params...); err != nil {
 		return nil, err
@@ -50,12 +50,11 @@ func (r *Repository) InsertAdminRole(ctx context.Context, name string, permissio
 }
 
 func (r *Repository) GetAdminRoleByID(ctx context.Context, id int64) (*models.AdminRole, error) {
-	q := fmt.Sprintf(`
-		select
-      id, created_at, updated_at, deleted_at, tombstoned, name, permissions, creator_admin_id
-    from public.admin_roles
-		where id=$1 and tombstoned=false;
-	`)
+	q := `
+  select
+    id, created_at, updated_at, deleted_at, tombstoned, name, permissions, creator_admin_id
+  from public.admin_roles
+  where id=$1 and tombstoned=false;`
 	row, err := r.driver.QueryRow(ctx, q, id)
 	if err != nil {
 		return nil, err
@@ -84,12 +83,11 @@ func (r *Repository) GetAdminRoleByID(ctx context.Context, id int64) (*models.Ad
 }
 
 func (r *Repository) GetAdminRoleByName(ctx context.Context, name string) (*models.AdminRole, error) {
-	q := fmt.Sprintf(`
-		select
-      id, created_at, updated_at, deleted_at, tombstoned, name, permissions, creator_admin_id
-    from public.admin_roles
-		where name=$1 and tombstoned=false;
-	`)
+	q := `
+  select
+    id, created_at, updated_at, deleted_at, tombstoned, name, permissions, creator_admin_id
+  from public.admin_roles
+  where name=$1 and tombstoned=false;`
 	row, err := r.driver.QueryRow(ctx, q, name)
 	if err != nil {
 		return nil, err

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	commonModels "github.com/ecumenos/ecumenos/models"
+	"github.com/ecumenos/ecumenos/models/common"
 	models "github.com/ecumenos/ecumenos/models/zookeeper"
 )
 
@@ -19,7 +19,7 @@ func (s *Service) CreateAdmin(ctx context.Context, email, password string) (*mod
 }
 
 func (s *Service) ValidateAdminCredentials(ctx context.Context, email, password string) error {
-	if !commonModels.EmailRegex.MatchString(email) {
+	if !common.EmailRegex.MatchString(email) {
 		return fmt.Errorf("invalid email. it doesn't fulfill validation (email = %v)", email)
 	}
 	a, err := s.repo.GetAdminByEmail(ctx, email)
