@@ -41,10 +41,10 @@ generate_docs()
         exit 1
     fi
     DOCS_HTML_FILE="$SERVICE_NAME.html"
-    mv redoc-static.html $DOCS_HTML_FILE
+    mv -f redoc-static.html $DOCS_HTML_FILE
     cd ../..
     mkdir -p ./internal/docs
-    mv ./internal/openapi/$DOCS_HTML_FILE ./internal/docs
+    mv -f ./internal/openapi/$DOCS_HTML_FILE ./internal/docs
     echo "generated HTML doc file and moved to ./internal/docs/ dir (service=$SERVICE_NAME)"
 
     GEN_ROUTER_DIR="./internal/generated/$SERVICE_NAME"
@@ -68,3 +68,4 @@ generate_docs "orbissocius"
 generate_docs "orbissociusadmin"
 generate_docs "pds"
 generate_docs "pdsadmin"
+generate_docs "accounts"

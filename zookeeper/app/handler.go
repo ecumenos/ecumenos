@@ -100,6 +100,7 @@ func (h *handler) GetSpecs(rw http.ResponseWriter, r *http.Request) {
 
 func mapModelComptusToGenComptus(v *models.Comptus) gen.Comptus {
 	return gen.Comptus{
+		Id:       v.ID,
 		Country:  gen.Country(v.Patria),
 		Email:    types.Email(v.Email),
 		Language: gen.Language(v.Lingua),

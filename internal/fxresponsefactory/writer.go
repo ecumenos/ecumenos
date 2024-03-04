@@ -14,8 +14,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockery --name=Writer
-
 type Writer interface {
 	SetLogger(logger *zap.Logger)
 	WriteSuccess(ctx context.Context, payload interface{}, opts ...ResponseBuildOption) error

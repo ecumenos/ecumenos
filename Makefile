@@ -40,12 +40,7 @@ check: ## Compile everything, checking syntax (does not output binaries)
 	go build ./...
 
 .PHONY: mock
-mock: mock_clean
-	go generate ./...
-
-.PHONY: mock_clean
-mock_clean:
-	find . -name "*.go" -path "**/mocks/*" | while read file; do rm $$file; done;
+	sh scripts/docs.sh
 
 .PHONY: openapi
 openapi:

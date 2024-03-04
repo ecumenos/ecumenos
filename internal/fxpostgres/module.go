@@ -33,8 +33,6 @@ var Module = fx.Options(
 	}),
 )
 
-//go:generate mockery --name=Driver
-
 type Driver interface {
 	Ping(ctx context.Context) error
 	Close()
