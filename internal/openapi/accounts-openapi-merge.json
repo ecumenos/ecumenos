@@ -1,0 +1,12 @@
+{
+  "inputs": [
+      { "inputFile": "./accounts.yaml" },
+      {
+        "inputFile": "./shared-internal.yaml",
+        "operationSelection": {
+          "excludeTags": ["Internal"]
+        }
+      }
+  ],
+  "output": "./accounts-merged.yaml"
+}

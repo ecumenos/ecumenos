@@ -7,8 +7,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockery --name=Factory
-
 type Factory interface {
 	NewWriter(rw http.ResponseWriter) Writer
 }

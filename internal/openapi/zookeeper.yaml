@@ -377,10 +377,14 @@ components:
       type: object
       nullable: false
       required:
+        - id
         - email
         - country
         - language
       properties:
+        id:
+          type: integer
+          format: int64
         email:
           type: string
           format: email

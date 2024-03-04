@@ -1,2 +1,38 @@
-disable-version-string: True
 with-expecter: True
+inpackage: False
+dir: "{{.InterfaceDir}}"
+mockname: "Mock{{.InterfaceName}}"
+outpkg: "mocks"
+filename: "./mocks/{{.InterfaceName}}.go"
+all: True
+log-level: "error"
+packages:
+  github.com/ecumenos/ecumenos/accounts:
+    config:
+      exclude: [mocks]
+      recursive: True
+  github.com/ecumenos/ecumenos/orbissocius:
+    config:
+      exclude: [mocks]
+      recursive: True
+  github.com/ecumenos/ecumenos/pds:
+    config:
+      exclude: [mocks]
+      recursive: True
+  github.com/ecumenos/ecumenos/zookeeper:
+    config:
+      exclude: [mocks]
+      recursive: True
+
+  github.com/ecumenos/ecumenos/internal/fxlogger:
+    config:
+      exclude: [mocks]
+      recursive: True
+  github.com/ecumenos/ecumenos/internal/fxpostgres:
+    config:
+      exclude: [mocks]
+      recursive: True
+  github.com/ecumenos/ecumenos/internal/fxresponsefactory:
+    config:
+      exclude: [mocks]
+      recursive: True
