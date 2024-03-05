@@ -1,0 +1,166 @@
+countries:
+  - country_code: alb
+    enabled: true
+    regions: [eu_south_east]
+  - country_code: and
+    enabled: true
+    regions: [eu_west]
+  - country_code: arm
+    enabled: true
+    regions: [eu_east]
+  - country_code: aut
+    enabled: true
+    regions: [eu_cent]
+  - country_code: bel
+    enabled: true
+    regions: [eu_west]
+  - country_code: bgr
+    enabled: true
+    regions: [eu_south_east]
+  - country_code: bih
+    enabled: true
+    regions: [eu_south_east]
+  - country_code: blr
+    enabled: false
+    regions: [eu_east]
+  - country_code: can
+    enabled: true
+    regions: [na_can]
+  - country_code: che
+    enabled: true
+    regions: [eu_cent]
+  - country_code: cyp
+    enabled: true
+    regions: [eu_south]
+  - country_code: cze
+    enabled: true
+    regions: [eu_cent]
+  - country_code: deu
+    enabled: true
+    regions: [eu_cent]
+  - country_code: dnk
+    enabled: true
+    regions: [eu_north]
+  - country_code: esp
+    enabled: true
+    regions: [eu_south_west]
+  - country_code: est
+    enabled: true
+    regions: [eu_north]
+  - country_code: fin
+    enabled: true
+    regions: [eu_north]
+  - country_code: fra
+    enabled: true
+    regions: [eu_west]
+  - country_code: fro
+    enabled: true
+    regions: [eu_west]
+  - country_code: gbr
+    enabled: true
+    regions: [eu_west]
+  - country_code: geo
+    enabled: true
+    regions: [eu_east]
+  - country_code: gib
+    enabled: true
+    regions: [eu_south_west]
+  - country_code: grc
+    enabled: true
+    regions: [eu_south]
+  - country_code: hrv
+    enabled: true
+    regions: [eu_south_east]
+  - country_code: hun
+    enabled: true
+    regions: [eu_cent]
+  - country_code: imn
+    enabled: true
+    regions: [eu_west]
+  - country_code: irl
+    enabled: true
+    regions: [eu_west]
+  - country_code: isl
+    enabled: true
+    regions: [eu_north]
+  - country_code: ita
+    enabled: true
+    regions: [eu_south]
+  - country_code: lie
+    enabled: true
+    regions: [eu_west]
+  - country_code: ltu
+    enabled: true
+    regions: [eu_north]
+  - country_code: lux
+    enabled: true
+    regions: [eu_west]
+  - country_code: lva
+    enabled: true
+    regions: [eu_north]
+  - country_code: mco
+    enabled: true
+    regions: [eu_west]
+  - country_code: mda
+    enabled: true
+    regions: [eu_east]
+  - country_code: mex
+    enabled: true
+    regions: [na_mex]
+  - country_code: mkd
+    enabled: true
+    regions: [eu_south_east]
+  - country_code: mlt
+    enabled: true
+    regions: [eu_south]
+  - country_code: mne
+    enabled: true
+    regions: [eu_south_east]
+  - country_code: nld
+    enabled: true
+    regions: [eu_west]
+  - country_code: nor
+    enabled: true
+    regions: [eu_north]
+  - country_code: pol
+    enabled: true
+    regions: [eu_cent]
+  - country_code: prt
+    enabled: true
+    regions: [eu_south_west]
+  - country_code: rou
+    enabled: true
+    regions: [eu_south_east]
+  - country_code: rus
+    enabled: false
+    regions: [eu_east]
+  - country_code: smr
+    enabled: true
+    regions: [eu_south]
+  - country_code: srb
+    enabled: true
+    regions: [eu_south_east]
+  - country_code: svk
+    enabled: true
+    regions: [eu_cent]
+  - country_code: svn
+    enabled: true
+    regions: [eu_cent]
+  - country_code: swe
+    enabled: true
+    regions: [eu_north]
+  - country_code: tur
+    enabled: true
+    regions: [eu_east]
+  - country_code: ukr
+    enabled: true
+    regions: [eu_east]
+  - country_code: usa
+    enabled: true
+    regions: [na_us_west, na_us_midwest, na_us_south, na_us_northeast]
+  - country_code: vat
+    enabled: true
+    regions: [eu_south]
+  - country_code: xkx
+    enabled: true
+    regions: [eu_south_east]

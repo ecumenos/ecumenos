@@ -3,7 +3,7 @@ export SHELL=/bin/sh
 export GOEXPERIMENT := loopvar
 
 .PHONY: all
-all: tidy check fmt lint test mock tidy
+all: tidy check fmt lint test mock tidy openapi tidy
 
 .PHONY: test
 test: ## Run tests
@@ -40,7 +40,8 @@ check: ## Compile everything, checking syntax (does not output binaries)
 	go build ./...
 
 .PHONY: mock
-	sh scripts/docs.sh
+mock:
+	sh scripts/mocks.sh
 
 .PHONY: openapi
 openapi:

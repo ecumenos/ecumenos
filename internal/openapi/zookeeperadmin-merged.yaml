@@ -182,9 +182,9 @@ paths:
                       data:
                         $ref: '#/components/schemas/GetHealthData'
         '500':
-          $ref: ./shared-internal.yaml#/components/responses/Error
+          $ref: '#/components/responses/Error'
         default:
-          $ref: ./shared-internal.yaml#/components/responses/Failure
+          $ref: '#/components/responses/Failure'
   /info:
     get:
       tags:
@@ -222,9 +222,9 @@ paths:
                       data:
                         $ref: '#/components/schemas/GetInfoData'
         '500':
-          $ref: ./shared-internal.yaml#/components/responses/Error
+          $ref: '#/components/responses/Error'
         default:
-          $ref: ./shared-internal.yaml#/components/responses/Failure
+          $ref: '#/components/responses/Failure'
   /docs:
     get:
       description: Returns HTML docs.

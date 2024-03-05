@@ -15,6 +15,13 @@ func (s *Service) CreateComptus(ctx context.Context, email, password, patria, li
 		return nil, err
 	}
 
+	if err := s.settings.ValidateCountryCode(patria); err != nil {
+		return nil, err
+	}
+	if err := s.settings.ValidateLanguageCode(lingua); err != nil {
+		return nil, err
+	}
+
 	return s.repo.InsertComptus(ctx, email, passwordHash, patria, lingua)
 }
 

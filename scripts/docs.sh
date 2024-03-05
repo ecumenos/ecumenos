@@ -36,7 +36,7 @@ generate_docs()
     # build openapi docs
     OPENAPI_MERGED_YAML_FILE="$SERVICE_NAME-merged.yaml"
     redoc build $OPENAPI_MERGED_YAML_FILE
-    if [[ $? != 0 ]]; then
+    if [ $? != 0 ]; then
         echo "Failed to generate HTML API documentation."
         exit 1
     fi
@@ -51,17 +51,24 @@ generate_docs()
     mkdir -p $GEN_ROUTER_DIR
     oapi-codegen -o $GEN_ROUTER_DIR/router.go \
         -generate gorilla -package $SERVICE_NAME \
-        --import-mapping ./shared-internal.yaml:github.com/ecumenos/ecumenos/internal/generated internal/openapi/$OPENAPI_MERGED_YAML_FILE
+        --import-mapping ./shared-internal.yaml:github.com/ecumenos/ecumenos/internal/generated/shared internal/openapi/$OPENAPI_MERGED_YAML_FILE
     oapi-codegen -o $GEN_ROUTER_DIR/types.go \
         -generate types,skip-prune -package $SERVICE_NAME \
-        --import-mapping ./shared-internal.yaml:github.com/ecumenos/ecumenos/internal/generated internal/openapi/$OPENAPI_MERGED_YAML_FILE
+        --import-mapping ./shared-internal.yaml:github.com/ecumenos/ecumenos/internal/generated/shared internal/openapi/$OPENAPI_MERGED_YAML_FILE
     echo "generated router & types by openapi file (service=$SERVICE_NAME)"
 
     # Clean up artifacts
     echo "removed temporary files (service=$SERVICE_NAME)"
 }
 
-oapi-codegen -o internal/generated/types.go -generate types,skip-prune -package generated internal/openapi/shared-internal.yaml
+echo "starting generation of shared types..."
+mkdir -p "./internal/generated/shared"
+oapi-codegen -o internal/generated/shared/types.go \
+    -generate types,skip-prune \
+    -package shared \
+    internal/openapi/shared-internal.yaml
+echo "generated shared types"
+
 generate_docs "zookeeperadmin"
 generate_docs "zookeeper"
 generate_docs "orbissocius"

@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/oapi-codegen/runtime"
 )
 
 // ServerInterface represents all server handlers.
@@ -28,6 +29,12 @@ type ServerInterface interface {
 	// Sign Up
 	// (POST /auth/sign-up)
 	SignUp(w http.ResponseWriter, r *http.Request)
+	// Get Countries
+	// (GET /countries)
+	GetCountries(w http.ResponseWriter, r *http.Request)
+	// Get Country Regions
+	// (GET /countries/{countryCode}/regions)
+	GetCountryRegions(w http.ResponseWriter, r *http.Request, countryCode string)
 	// Returns HTML docs.
 	// (GET /docs)
 	GetDocs(w http.ResponseWriter, r *http.Request)
@@ -37,9 +44,12 @@ type ServerInterface interface {
 	// Service Info
 	// (GET /info)
 	GetInfo(w http.ResponseWriter, r *http.Request)
+	// Get Languages
+	// (GET /languages)
+	GetLanguages(w http.ResponseWriter, r *http.Request)
 	// Activation Orbis Socius
 	// (POST /orbes_socii/activate)
-	AcrivateOrbisSocius(w http.ResponseWriter, r *http.Request)
+	ActivateOrbisSocius(w http.ResponseWriter, r *http.Request)
 	// Request Orbis Socius
 	// (POST /orbes_socii/request)
 	RequestOrbisSocius(w http.ResponseWriter, r *http.Request)
@@ -142,6 +152,51 @@ func (siw *ServerInterfaceWrapper) SignUp(w http.ResponseWriter, r *http.Request
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// GetCountries operation middleware
+func (siw *ServerInterfaceWrapper) GetCountries(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCountries(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetCountryRegions operation middleware
+func (siw *ServerInterfaceWrapper) GetCountryRegions(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "countryCode" -------------
+	var countryCode string
+
+	err = runtime.BindStyledParameter("simple", false, "countryCode", mux.Vars(r)["countryCode"], &countryCode)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "countryCode", Err: err})
+		return
+	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCountryRegions(w, r, countryCode)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // GetDocs operation middleware
 func (siw *ServerInterfaceWrapper) GetDocs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -193,14 +248,31 @@ func (siw *ServerInterfaceWrapper) GetInfo(w http.ResponseWriter, r *http.Reques
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// AcrivateOrbisSocius operation middleware
-func (siw *ServerInterfaceWrapper) AcrivateOrbisSocius(w http.ResponseWriter, r *http.Request) {
+// GetLanguages operation middleware
+func (siw *ServerInterfaceWrapper) GetLanguages(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.AcrivateOrbisSocius(w, r)
+		siw.Handler.GetLanguages(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// ActivateOrbisSocius operation middleware
+func (siw *ServerInterfaceWrapper) ActivateOrbisSocius(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ActivateOrbisSocius(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -367,13 +439,19 @@ func HandlerWithOptions(si ServerInterface, options GorillaServerOptions) http.H
 
 	r.HandleFunc(options.BaseURL+"/auth/sign-up", wrapper.SignUp).Methods("POST")
 
+	r.HandleFunc(options.BaseURL+"/countries", wrapper.GetCountries).Methods("GET")
+
+	r.HandleFunc(options.BaseURL+"/countries/{countryCode}/regions", wrapper.GetCountryRegions).Methods("GET")
+
 	r.HandleFunc(options.BaseURL+"/docs", wrapper.GetDocs).Methods("GET")
 
 	r.HandleFunc(options.BaseURL+"/health", wrapper.GetHealth).Methods("GET")
 
 	r.HandleFunc(options.BaseURL+"/info", wrapper.GetInfo).Methods("GET")
 
-	r.HandleFunc(options.BaseURL+"/orbes_socii/activate", wrapper.AcrivateOrbisSocius).Methods("POST")
+	r.HandleFunc(options.BaseURL+"/languages", wrapper.GetLanguages).Methods("GET")
+
+	r.HandleFunc(options.BaseURL+"/orbes_socii/activate", wrapper.ActivateOrbisSocius).Methods("POST")
 
 	r.HandleFunc(options.BaseURL+"/orbes_socii/request", wrapper.RequestOrbisSocius).Methods("POST")
 

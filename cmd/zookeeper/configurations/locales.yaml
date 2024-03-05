@@ -1,0 +1,59 @@
+languages:
+  - language_code: apc
+    enabled: false
+  - language_code: arz
+    enabled: false
+  - language_code: ben
+    enabled: false
+  - language_code: bho
+    enabled: false
+  - language_code: cmn
+    enabled: false
+  - language_code: deu
+    enabled: false
+  - language_code: eng
+    enabled: true
+  - language_code: fra
+    enabled: false
+  - language_code: guj
+    enabled: false
+  - language_code: hau
+    enabled: false
+  - language_code: hin
+    enabled: false
+  - language_code: ita
+    enabled: false
+  - language_code: jav
+    enabled: false
+  - language_code: jpn
+    enabled: false
+  - language_code: kor
+    enabled: false
+  - language_code: mar
+    enabled: false
+  - language_code: nan
+    enabled: false
+  - language_code: pan
+    enabled: false
+  - language_code: pes
+    enabled: false
+  - language_code: por
+    enabled: false
+  - language_code: spa
+    enabled: false
+  - language_code: tam
+    enabled: false
+  - language_code: tel
+    enabled: false
+  - language_code: tur
+    enabled: false
+  - language_code: ukr
+    enabled: true
+  - language_code: urd
+    enabled: false
+  - language_code: vie
+    enabled: false
+  - language_code: wuu
+    enabled: false
+  - language_code: yue
+    enabled: false

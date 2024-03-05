@@ -1,26 +1,19 @@
 #!/bin/sh
 
-function deps()
-{
-  go mod tidy
-}
-
-function clean()
-{
-  find . -name "*.go" -path "**/mocks/*" | while read file; do rm $$file; done;
-}
-
-function deleteIgnored()
-{
-  ignored=( "ResponseBuildOption" )
-  for i in "${!ignored[@]}"
-  do
-    rm -rfv \$i
-  done
-}
-
-clean
-deps
+echo "starting mocks generation"
+go mod tidy
 mockery --all
-deleteIgnored
-deps
+echo "mocks were generared"
+
+for ignored in "ResponseBuildOption.go"
+  do
+    for i in $(find * -type f); do 
+      if [ -f "$i" ]; then
+        if echo "$i" | grep -iq "$ignored"; then
+          rm -rfv $i
+        fi
+      fi
+    done
+  done
+echo "deleted ignored mocks"
+go mod tidy
