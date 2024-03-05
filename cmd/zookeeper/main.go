@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/ecumenos/ecumenos/internal/fxappsettings"
 	"github.com/ecumenos/ecumenos/internal/fxlogger"
 	"github.com/ecumenos/ecumenos/internal/zerodowntime"
 	"github.com/ecumenos/ecumenos/zookeeper"
@@ -55,8 +56,9 @@ func run(args []string) error {
 type configuration struct {
 	fx.Out
 
-	Config       *config.Config
-	LoggerConfig *fxlogger.Config
+	Config            *config.Config
+	LoggerConfig      *fxlogger.Config
+	AppSettingsConfig *fxappsettings.Config
 }
 
 var runAppCmd = &cli.Command{
@@ -68,6 +70,18 @@ var runAppCmd = &cli.Command{
 			Usage:   "secret used for authenticating JWT tokens",
 			Value:   "jwtsecretplaceholder",
 			EnvVars: []string{"APP_JWT_SECRET"},
+		},
+		&cli.StringFlag{
+			Name:    "locales_path",
+			Usage:   "path to locales configuration",
+			Value:   "./cmd/zookeeper/configurations/locales.yaml",
+			EnvVars: []string{"APP_LOCALES_PATH"},
+		},
+		&cli.StringFlag{
+			Name:    "regions_path",
+			Usage:   "path to regions configuration",
+			Value:   "./cmd/zookeeper/configurations/regions.yaml",
+			EnvVars: []string{"APP_REGIONS_PATH"},
 		},
 	},
 	Action: func(cctx *cli.Context) error {
@@ -81,10 +95,15 @@ var runAppCmd = &cli.Command{
 				return configuration{
 					Config:       cfg,
 					LoggerConfig: &fxlogger.Config{Prod: cctx.Bool("prod")},
+					AppSettingsConfig: &fxappsettings.Config{
+						LocalesPath: cctx.String("locales_path"),
+						RegionsPath: cctx.String("regions_path"),
+					},
 				}
 			})),
 			zookeeper.Module,
 			fxlogger.Module,
+			fxappsettings.Module,
 			fx.Invoke(func(lc fx.Lifecycle, server *app.Server, shutdowner fx.Shutdowner) {
 				lc.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {

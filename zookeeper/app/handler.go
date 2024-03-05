@@ -101,9 +101,9 @@ func (h *handler) GetSpecs(rw http.ResponseWriter, r *http.Request) {
 func mapModelComptusToGenComptus(v *models.Comptus) gen.Comptus {
 	return gen.Comptus{
 		Id:       v.ID,
-		Country:  gen.Country(v.Patria),
+		Country:  v.Patria,
 		Email:    types.Email(v.Email),
-		Language: gen.Language(v.Lingua),
+		Language: v.Lingua,
 	}
 }
 
@@ -248,7 +248,43 @@ func (h *handler) SignIn(rw http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *handler) AcrivateOrbisSocius(rw http.ResponseWriter, r *http.Request) {
+func (h *handler) GetCountries(rw http.ResponseWriter, r *http.Request) {
+	ctx := h.auth(rw, r)
+	if ctx == nil {
+		return
+	}
+
+	writer := h.responseFactory.NewWriter(rw)
+	countries := h.service.GetOrbisSociusCountries()
+
+	_ = writer.WriteSuccess(ctx, gen.CountriesResponseData(countries)) //nolint:errcheck
+}
+
+func (h *handler) GetCountryRegions(rw http.ResponseWriter, r *http.Request, countryCode string) {
+	ctx := h.auth(rw, r)
+	if ctx == nil {
+		return
+	}
+
+	writer := h.responseFactory.NewWriter(rw)
+	regions := h.service.GetOrbisSociusRegions(countryCode)
+
+	_ = writer.WriteSuccess(ctx, gen.CountryRegionsResponseData(regions)) //nolint:errcheck
+}
+
+func (h *handler) GetLanguages(rw http.ResponseWriter, r *http.Request) {
+	ctx := h.auth(rw, r)
+	if ctx == nil {
+		return
+	}
+
+	writer := h.responseFactory.NewWriter(rw)
+	languages := h.service.GetOrbisSociusLanguages()
+
+	_ = writer.WriteSuccess(ctx, gen.LanguagesResponseData(languages)) //nolint:errcheck
+}
+
+func (h *handler) ActivateOrbisSocius(rw http.ResponseWriter, r *http.Request) {
 	ctx := h.auth(rw, r)
 	if ctx == nil {
 		return
@@ -263,7 +299,25 @@ func (h *handler) RequestOrbisSocius(rw http.ResponseWriter, r *http.Request) {
 	if ctx == nil {
 		return
 	}
-
 	writer := h.responseFactory.NewWriter(rw)
-	_ = writer.WriteError(ctx, "not implemented", nil, f.WithHTTPStatusCode(http.StatusNotImplemented)) //nolint:errcheck
+	comptusID, ok := contextutils.GetComptusID(ctx)
+	if !ok {
+		_ = writer.WriteError(ctx, "something went wrong", errors.New("can not get comptus id from context")) //nolint:errcheck
+		return
+	}
+
+	request, err := httputils.DecodeBody[gen.RequestOrbisSociusRequest](h.logger, r)
+	if err != nil {
+		_ = writer.WriteFail(ctx, "invalid body", f.WithCause(err)) //nolint:errcheck
+		return
+	}
+
+	if _, err := h.service.MakeCreateOrbisSociusLaunchRequest(ctx, comptusID, request.Region, request.Name, request.Description, request.Url); err != nil {
+		_ = writer.WriteFail(ctx, "can not create orbis socius launch request", f.WithCause(err)) //nolint:errcheck
+		return
+	}
+
+	_ = writer.WriteSuccess(ctx, gen.RequestOrbisSociusResponseData{ //nolint:errcheck
+		Ok: true,
+	})
 }

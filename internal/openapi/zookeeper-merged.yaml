@@ -7,8 +7,10 @@ servers:
 security:
   - bearerAuth: []
 tags:
-  - description: Endpoints for interacting with Orbes Socii functionality
+  - description: Endpoints for interacting with Orbes Socii functionality.
     name: OrbesSocii
+  - description: Endpoints for interacting with Authorization functionality.
+    name: Authorization
   - description: Endpoints to support developers
     name: System
 paths:
@@ -296,7 +298,7 @@ paths:
         - OrbesSocii
       description: Activation of Orbis Socius instance.
       summary: Activation Orbis Socius
-      operationId: acrivateOrbisSocius
+      operationId: activateOrbisSocius
       requestBody:
         content:
           application/json:
@@ -332,6 +334,154 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/ActivateOrbisSociusResponseData'
+        '401':
+          $ref: ./shared-internal.yaml#/components/responses/NotAuthorized
+        '403':
+          $ref: ./shared-internal.yaml#/components/responses/Forbidden
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+  /countries:
+    get:
+      tags:
+        - System
+      description: Returns Countries available for operations.
+      summary: Get Countries
+      operationId: getCountries
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestID
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestDuration
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/Timestamp
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/SemverVersion
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: >-
+                      ./shared-internal.yaml#/components/schemas/JSendResponseObject
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CountriesResponseData'
+        '401':
+          $ref: ./shared-internal.yaml#/components/responses/NotAuthorized
+        '403':
+          $ref: ./shared-internal.yaml#/components/responses/Forbidden
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+  '/countries/{countryCode}/regions':
+    get:
+      tags:
+        - System
+      description: Returns Country Regions by Country Code available for operations.
+      summary: Get Country Regions
+      operationId: getCountryRegions
+      parameters:
+        - in: path
+          name: countryCode
+          schema:
+            type: string
+          required: true
+          description: CountryCode is ISO 3166-1 alpha-3 country code.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestID
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestDuration
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/Timestamp
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/SemverVersion
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: >-
+                      ./shared-internal.yaml#/components/schemas/JSendResponseObject
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CountryRegionsResponseData'
+        '401':
+          $ref: ./shared-internal.yaml#/components/responses/NotAuthorized
+        '403':
+          $ref: ./shared-internal.yaml#/components/responses/Forbidden
+        '500':
+          $ref: ./shared-internal.yaml#/components/responses/Error
+        default:
+          $ref: ./shared-internal.yaml#/components/responses/Failure
+  /languages:
+    get:
+      tags:
+        - System
+      description: Returns Languages available for operations.
+      summary: Get Languages
+      operationId: getLanguages
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-Id:
+              description: identifier of current request.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestID
+            X-Request-Duration:
+              description: duration of request processing in milliseconds.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/RequestDuration
+            X-Timestamp:
+              description: timestamp of sending response.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/Timestamp
+            X-App-Version:
+              description: app version is semver application version.
+              schema:
+                $ref: ./shared-internal.yaml#/components/schemas/SemverVersion
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: >-
+                      ./shared-internal.yaml#/components/schemas/JSendResponseObject
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LanguagesResponseData'
         '401':
           $ref: ./shared-internal.yaml#/components/responses/NotAuthorized
         '403':
@@ -377,9 +527,9 @@ paths:
                       data:
                         $ref: '#/components/schemas/GetHealthData'
         '500':
-          $ref: ./shared-internal.yaml#/components/responses/Error
+          $ref: '#/components/responses/Error'
         default:
-          $ref: ./shared-internal.yaml#/components/responses/Failure
+          $ref: '#/components/responses/Failure'
   /info:
     get:
       tags:
@@ -417,9 +567,9 @@ paths:
                       data:
                         $ref: '#/components/schemas/GetInfoData'
         '500':
-          $ref: ./shared-internal.yaml#/components/responses/Error
+          $ref: '#/components/responses/Error'
         default:
-          $ref: ./shared-internal.yaml#/components/responses/Failure
+          $ref: '#/components/responses/Failure'
   /docs:
     get:
       description: Returns HTML docs.
@@ -480,22 +630,6 @@ components:
       minLength: 8
       maxLength: 50
       pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$'
-    Country:
-      type: string
-      description: Country is ISO 3166-1 alpha-3 country code
-      enum:
-        - ukr
-        - usa
-        - gbr
-        - pol
-        - deu
-        - fra
-    Language:
-      type: string
-      description: 'Language is ISO 639-2:1998 alpha-3 language code'
-      enum:
-        - ukr
-        - eng
     AuthTokenPair:
       type: object
       nullable: false
@@ -523,9 +657,11 @@ components:
           type: string
           format: email
         country:
-          $ref: '#/components/schemas/Country'
+          type: string
+          description: Country is ISO 3166-1 alpha-3 country code
         language:
-          $ref: '#/components/schemas/Language'
+          type: string
+          description: 'Language is ISO 639-2:1998 alpha-3 language code'
     SignUpRequest:
       type: object
       nullable: false
@@ -541,9 +677,11 @@ components:
         password:
           $ref: '#/components/schemas/Password'
         country:
-          $ref: '#/components/schemas/Country'
+          type: string
+          description: Country is ISO 3166-1 alpha-3 country code
         language:
-          $ref: '#/components/schemas/Language'
+          type: string
+          description: 'Language is ISO 639-2:1998 alpha-3 language code'
     SignUpResponseData:
       type: object
       nullable: false
@@ -661,6 +799,18 @@ components:
       properties:
         api_key:
           type: string
+    CountriesResponseData:
+      type: array
+      items:
+        type: string
+    CountryRegionsResponseData:
+      type: array
+      items:
+        type: string
+    LanguagesResponseData:
+      type: array
+      items:
+        type: string
     ErrorResponseBody:
       type: object
       required:
