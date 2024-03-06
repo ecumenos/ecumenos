@@ -1,59 +1,79 @@
 languages:
-  - language_code: apc
+  - language_code: apc # Levantine Arabic, Syro-Palestinian Arabic, شامي šāmi
     enabled: false
-  - language_code: arz
+  - language_code: arz # Egyptian Arabic, Masri, مصرى
     enabled: false
-  - language_code: ben
+  - language_code: ben # Bengali, Bangla, বাংলা
     enabled: false
-  - language_code: bho
+  - language_code: bho # Bhojpuri, भोजपुरी
     enabled: false
-  - language_code: cmn
+  - language_code: cmn # Mandarin, 官话; 官話, Guānhuà
     enabled: false
-  - language_code: deu
+  - language_code: deu # Standard High German, Standard German, High German, also often simply German, Standardhochdeutsch, Standarddeutsch, Hochdeutsch
     enabled: false
-  - language_code: eng
+  - language_code: ell # Modern Greek, Ελληνικά, Elliniká
+    enabled: false
+  - language_code: eng # English
     enabled: true
-  - language_code: fra
+  - language_code: est # Estonian, eesti keel
     enabled: false
-  - language_code: guj
+  - language_code: fin # Finnish, suomi
     enabled: false
-  - language_code: hau
+  - language_code: fra # French, français
     enabled: false
-  - language_code: hin
+  - language_code: gle # Irish, Irish Gaelic, Gaelic
     enabled: false
-  - language_code: ita
+  - language_code: grc # Ancient Greek, Ἑλληνική, Hellēnikḗ
     enabled: false
-  - language_code: jav
+  - language_code: guj # Gujarati, Gujarātī bhāṣā, ગુજરાતી
     enabled: false
-  - language_code: jpn
+  - language_code: hau # Hausa, هَرْشٜن هَوْسَ, Harshen/Halshen Hausa
     enabled: false
-  - language_code: kor
+  - language_code: heb # Hebrew, Ivrit
     enabled: false
-  - language_code: mar
+  - language_code: hin # Hindi, Modern Standard Hindi, हिन्दी
     enabled: false
-  - language_code: nan
+  - language_code: ita # Italian, Italiano, lingua italiana
     enabled: false
-  - language_code: pan
+  - language_code: jav # Javanese, båså Jåwå, بَاسَا جَاوَا
     enabled: false
-  - language_code: pes
+  - language_code: jpn # Japanese, 日本語, にほんご, nihongo
     enabled: false
-  - language_code: por
+  - language_code: kor # Korean, 한국어 (South Korea), 조선말 (North Korea)
     enabled: false
-  - language_code: spa
+  - language_code: lat # Latin
     enabled: false
-  - language_code: tam
+  - language_code: lav # Latvian, Lettish, latviešu valoda
     enabled: false
-  - language_code: tel
+  - language_code: lit # Lithuanian, lietuvių kalba
     enabled: false
-  - language_code: tur
+  - language_code: mar # Marathi, Marāṭhī, मराठी
     enabled: false
-  - language_code: ukr
+  - language_code: nan # Southern Min, Hoklo-Taiwanese, 閩南語; 闽南语, Bàn-lâm-gú
+    enabled: false
+  - language_code: pan # Punjabi, ਪੰਜਾਬੀ, پنجابی
+    enabled: false
+  - language_code: pes # Iranian Persian, Western Persian, فارسی, Fārsi
+    enabled: false
+  - language_code: pol # Polish, polski
+    enabled: false
+  - language_code: por # Portuguese, português
+    enabled: false
+  - language_code: spa # Spanish, Castilian, español, castellano
+    enabled: false
+  - language_code: tam # Tamil, Tamiḻ, தமிழ்
+    enabled: false
+  - language_code: tel # Telugu, తెలుగు
+    enabled: false
+  - language_code: tur # Turkish, Türkçe (noun, adverb), Türk dili (noun)
+    enabled: false
+  - language_code: ukr # українська мова
     enabled: true
-  - language_code: urd
+  - language_code: urd # Urdu, Standard Urdu, اُردُو
     enabled: false
-  - language_code: vie
+  - language_code: vie # Vietnamese, tiếng Việt
     enabled: false
-  - language_code: wuu
+  - language_code: wuu # Wu
     enabled: false
-  - language_code: yue
+  - language_code: yue # Yue, Cantonese, 粤语; 粵語, 广东话; 廣東話
     enabled: false
